@@ -1,0 +1,768 @@
+
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Thai:wght@400;600;700&family=Sarabun:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#FFF8E7;--red:#B80000;--red2:#D00000;--red3:#8B0000;
+  --gold:#C8841A;--gold2:#E09A20;--gold3:#F5B830;
+  --text:#3D1A00;--text2:#6B3300;--text3:#994400;
+  --card:#FFFFFF;
+}
+body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+body::before{content:'';position:fixed;inset:0;background:
+  radial-gradient(circle at 20% 20%,rgba(255,200,50,0.25) 0%,transparent 50%),
+  radial-gradient(circle at 80% 80%,rgba(255,140,0,0.2) 0%,transparent 50%);
+pointer-events:none;z-index:0}
+.app{display:flex;min-height:100vh;position:relative;z-index:1}
+.sidebar{width:220px;background:linear-gradient(180deg,#FFF0C0,#FFE080 50%,#FFD040);border-right:2px solid var(--gold);flex-shrink:0;display:flex;flex-direction:column;box-shadow:3px 0 15px rgba(200,132,26,0.2)}
+.logo-area{padding:1.1rem .9rem 1rem;border-bottom:2px solid rgba(200,132,26,0.4);text-align:center;background:linear-gradient(180deg,rgba(255,255,255,0.5),transparent)}
+.logo-img{width:76px;height:76px;border-radius:50%;object-fit:cover;border:3px solid var(--gold2);display:block;margin:0 auto 8px;box-shadow:0 3px 12px rgba(200,132,26,0.4)}
+.logo-title{font-family:'Noto Serif Thai',serif;font-size:13px;font-weight:700;color:var(--red3);letter-spacing:.5px;line-height:1.4}
+.logo-sub{font-size:10px;color:var(--gold);margin-top:2px;font-weight:500}
+.nav-wrap{padding:.5rem 0;flex:1}
+.nav-item{display:flex;align-items:center;gap:9px;padding:10px 1rem;font-size:13px;cursor:pointer;color:var(--text2);transition:all .18s;border-left:3px solid transparent;font-weight:500}
+.nav-item:hover{color:var(--red3);background:rgba(200,132,26,0.12);border-left-color:rgba(200,132,26,0.5)}
+.nav-item.active{color:var(--red3);background:rgba(184,0,0,0.08);border-left-color:var(--red2);font-weight:600}
+.user-bar{padding:.75rem .9rem;border-top:2px solid rgba(200,132,26,0.3);background:rgba(255,255,255,0.4)}
+.user-nm{font-size:12px;color:var(--red3);font-weight:600}
+.user-rl{font-size:10.5px;color:var(--text3);margin-top:1px}
+.main{flex:1;overflow:auto;padding:1.5rem;background:transparent}
+.page-hdr{margin-bottom:1.3rem;padding-bottom:.9rem;border-bottom:2px solid rgba(200,132,26,0.25);display:flex;justify-content:space-between;align-items:flex-start}
+.page-hdr h2{font-family:'Noto Serif Thai',serif;font-size:18px;font-weight:700;color:var(--red3)}
+.page-hdr p{font-size:12px;color:var(--text3);margin-top:3px}
+.card{background:rgba(255,255,255,0.88);border:1.5px solid rgba(200,132,26,0.3);border-radius:12px;padding:1.2rem;margin-bottom:1rem;box-shadow:0 2px 12px rgba(200,132,26,0.12)}
+input,select,textarea{width:100%;padding:9px 12px;border:1.5px solid rgba(200,132,26,0.5);border-radius:8px;font-size:13px;font-family:inherit;background:#FFFDF5;color:#3D1A00;outline:none;transition:border .18s}
+input:focus,select:focus{border-color:var(--red2);box-shadow:0 0 0 3px rgba(184,0,0,0.1)}
+select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23B80000' d='M6 8L0 0h12z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:30px;cursor:pointer}
+select option{background:#FFFDF5;color:#3D1A00;font-size:13px}
+label{font-size:12px;font-weight:600;color:var(--text2);display:block;margin-bottom:4px}
+.form-group{margin-bottom:11px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.btn{padding:8px 15px;border-radius:8px;border:1.5px solid rgba(200,132,26,0.5);background:#FFFDF5;cursor:pointer;font-size:12.5px;font-family:inherit;color:var(--text2);transition:all .18s;font-weight:500}
+.btn:hover{background:rgba(200,132,26,0.12)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn-red{background:linear-gradient(135deg,var(--red3),var(--red2));color:#fff;border-color:var(--red);font-weight:600}
+.btn-red:hover:not(:disabled){background:linear-gradient(135deg,var(--red2),#E50000);box-shadow:0 3px 12px rgba(184,0,0,0.35)}
+.btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#fff;border-color:var(--gold);font-weight:600}
+.btn-gold:hover:not(:disabled){box-shadow:0 3px 12px rgba(200,132,26,0.4)}
+.btn-green{background:linear-gradient(135deg,#2d7a10,#3d9a18);color:#fff;border-color:#2d7a10;font-weight:600}
+.btn-sm{padding:5px 10px;font-size:11.5px}
+.btn-xs{padding:3px 8px;font-size:11px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:9px 11px;background:linear-gradient(135deg,rgba(200,132,26,0.15),rgba(200,132,26,0.08));font-weight:600;font-size:11.5px;color:var(--text2);border-bottom:2px solid rgba(200,132,26,0.3)}
+td{padding:9px 11px;border-bottom:1px solid rgba(200,132,26,0.12);vertical-align:middle;color:var(--text)}
+tr:hover td{background:rgba(200,132,26,0.05)}
+.bx{display:inline-flex;align-items:center;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600}
+.bx-g{background:#DEFFCC;color:#1A5A00;border:1px solid rgba(50,150,10,0.3)}
+.bx-r{background:#FFDDD9;color:#8B0000;border:1px solid rgba(184,0,0,0.3)}
+.bx-a{background:#FFF2CC;color:#7A4500;border:1px solid rgba(200,132,26,0.4)}
+.bx-gr{background:#F0EFE8;color:#666;border:1px solid rgba(0,0,0,0.12)}
+.bx-p{background:#FFE0F0;color:#7A0040;border:1px solid rgba(184,0,80,0.3)}
+.bx-b{background:#E0EEFF;color:#003E8B;border:1px solid rgba(0,80,184,0.3)}
+.overlay{position:fixed;inset:0;background:rgba(61,26,0,0.55);display:flex;align-items:center;justify-content:center;z-index:300;backdrop-filter:blur(3px)}
+.modal{background:linear-gradient(160deg,#FFFFF8,#FFFBF0);border:2px solid rgba(200,132,26,0.45);border-radius:14px;padding:1.5rem;width:500px;max-width:92vw;max-height:85vh;overflow-y:auto;box-shadow:0 8px 40px rgba(200,132,26,0.2)}
+.modal::before{content:'';display:block;height:3px;background:linear-gradient(90deg,transparent,var(--gold2),var(--red2),var(--gold2),transparent);border-radius:2px;margin:-1.5rem -1.5rem 1rem}
+.modal h3{font-family:'Noto Serif Thai',serif;font-size:15px;color:var(--red3);margin-bottom:1rem}
+.modal-acts{display:flex;gap:8px;justify-content:flex-end;margin-top:1rem;padding-top:1rem;border-top:1.5px solid rgba(200,132,26,0.2)}
+.alert-bar{position:sticky;top:0;z-index:50;margin-bottom:1rem;padding:10px 14px;border-radius:9px;font-size:13px;font-weight:500}
+.al-s{background:#EFFFEA;color:#1A5A00;border:1.5px solid rgba(50,150,10,0.4)}
+.al-w{background:#FFF9E0;color:#7A4500;border:1.5px solid rgba(200,132,26,0.4)}
+.al-d{background:#FFF0EE;color:#8B0000;border:1.5px solid rgba(184,0,0,0.4)}
+.al-i{background:#EEF4FF;color:#003E8B;border:1.5px solid rgba(0,80,184,0.4)}
+.stat-card{background:rgba(255,255,255,0.8);border:1.5px solid rgba(200,132,26,0.25);border-radius:9px;padding:.9rem;text-align:center;box-shadow:0 2px 8px rgba(200,132,26,0.1)}
+.stat-val{font-family:'Noto Serif Thai',serif;font-size:22px;font-weight:700;color:var(--red3)}
+.stat-lbl{font-size:11px;color:var(--text3);margin-top:3px;font-weight:500}
+.clock{font-family:'Noto Serif Thai',serif;font-size:44px;font-weight:700;text-align:center;color:var(--red3);text-shadow:0 2px 8px rgba(184,0,0,0.2);letter-spacing:4px;padding:.8rem 0 .2rem}
+.date-d{font-size:12px;color:var(--text3);text-align:center;margin-bottom:1.2rem;font-weight:500}
+.chk-btn{width:100%;padding:1.1rem;border-radius:11px;border:none;cursor:pointer;font-size:15px;font-weight:700;font-family:'Noto Serif Thai',serif;transition:all .25s;margin-bottom:1rem;letter-spacing:1px}
+.chk-btn.in{background:linear-gradient(135deg,var(--red3),var(--red2),#CC0000);color:#fff;box-shadow:0 4px 18px rgba(184,0,0,0.4)}
+.chk-btn.in:hover:not(:disabled){box-shadow:0 6px 25px rgba(184,0,0,0.55);transform:translateY(-1px)}
+.chk-btn.done{background:linear-gradient(135deg,#E8E0D0,#D0C8B8);color:#888;cursor:not-allowed;font-size:14px}
+.tabs{display:flex;margin-bottom:1.1rem;border-bottom:2px solid rgba(200,132,26,0.25)}
+.tab{padding:8px 14px;font-size:13px;cursor:pointer;color:var(--text3);border-bottom:2.5px solid transparent;margin-bottom:-2px;transition:.18s;font-weight:500}
+.tab.active{color:var(--red2);border-bottom-color:var(--red2);font-weight:700}
+.sec-t{font-size:10.5px;font-weight:700;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:.7rem;padding-bottom:.4rem;border-bottom:1.5px solid rgba(200,132,26,0.2)}
+.divider{height:1.5px;background:linear-gradient(90deg,transparent,rgba(200,132,26,0.35),transparent);margin:.9rem 0}
+.pgbar{height:6px;background:rgba(200,132,26,0.12);border-radius:3px;overflow:hidden;border:1px solid rgba(200,132,26,0.15)}
+.pgfill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--red3),var(--red2));transition:width .5s}
+.day-pill{display:inline-flex;align-items:center;padding:4px 10px;border-radius:20px;font-size:11.5px;cursor:pointer;font-weight:600;transition:.15s;user-select:none}
+.cat-overlay{position:fixed;inset:0;background:rgba(61,26,0,0.6);display:flex;align-items:center;justify-content:center;z-index:999;backdrop-filter:blur(3px)}
+.cat-box{background:linear-gradient(160deg,#FFFFF8,#FFF8E0);border:3px solid var(--gold2);border-radius:20px;padding:2rem;text-align:center;max-width:340px;animation:catPop .4s cubic-bezier(.17,.67,.35,1.3)}
+@keyframes catPop{0%{transform:scale(.5);opacity:0}100%{transform:scale(1);opacity:1}}
+.cat-emoji{font-size:80px;display:block;animation:catBounce .8s ease-in-out infinite alternate;line-height:1.2}
+@keyframes catBounce{0%{transform:translateY(0) rotate(-5deg)}100%{transform:translateY(-12px) rotate(5deg)}}
+.cat-stars{font-size:22px;letter-spacing:5px;margin:6px 0}
+.cat-msg{font-family:'Noto Serif Thai',serif;font-size:16px;font-weight:700;color:var(--red3);margin:8px 0 4px}
+.cat-close-btn{margin-top:1rem;padding:9px 24px;border-radius:20px;border:none;background:linear-gradient(135deg,var(--red3),var(--red2));color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
+.cat-close-btn:hover{transform:scale(1.05)}
+.gs-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:6px;font-size:10.5px;font-weight:600}
+.gs-ok{background:#DEFFCC;color:#1A5A00;border:1px solid rgba(50,150,10,0.3)}
+.gs-err{background:#FFDDD9;color:#8B0000;border:1px solid rgba(184,0,0,0.3)}
+.gs-wait{background:#FFF2CC;color:#7A4500;border:1px solid rgba(200,132,26,0.4)}
+.bday-card{border:2px solid rgba(255,130,180,0.45);border-radius:10px;padding:.9rem;margin-bottom:.75rem;display:flex;align-items:center;gap:10px;background:rgba(255,240,250,0.7)}
+.bday-today{border-color:rgba(200,132,26,0.6);background:rgba(255,250,220,0.8)}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+const{useState,useEffect,useMemo,useRef}=React;
+const SK='wt_yanlong_v2';
+const DT=['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
+const LOGO='/mnt/user-data/uploads/1777634985792_image.png';
+const GSHEET='https://script.google.com/macros/s/AKfycbx3kYa6cIMWQbkEH6tgYgJfnOXusfIbfxCffMx1Q-AaGWV7gcKww3XkQNw9QGfqaSbW/exec';
+
+const load=()=>{try{const d=localStorage.getItem(SK);return d?JSON.parse(d):null}catch{return null}};
+const sv=d=>{try{localStorage.setItem(SK,JSON.stringify(d))}catch{}};
+
+const init=()=>({
+  employees:[
+    {id:'adm001',name:'เจ้าของ',department:'บริหาร',role:'admin',pin:'0000',startDate:'2010-01-01',birthday:'1975-04-15',weeklyOff:[0],bdayMsg:'สุขสันต์วันเกิดเจ้านาย!',salary:0,bankName:'',bankAccount:''},
+    {id:'emp001',name:'สมชาย ใจดี',department:'รับจำนำ',role:'employee',pin:'1234',startDate:'2022-03-15',birthday:'2000-05-02',weeklyOff:[0,6],bdayMsg:'สุขสันต์วันเกิดค่ะ!',salary:18000,bankName:'กสิกรไทย',bankAccount:'123-4-56789-0'},
+    {id:'emp002',name:'สุดา มานะ',department:'บัญชี',role:'employee',pin:'5678',startDate:'2023-07-01',birthday:'1995-04-30',weeklyOff:[0],bdayMsg:'Happy Birthday!',salary:16000,bankName:'ไทยพาณิชย์',bankAccount:'456-7-89012-3'},
+  ],
+  records:[],leaves:[],
+  settings:{
+    onTimeHour:8,onTimeMin:30,lateHour:9,lateMin:0,
+    bdayAdminMsg:'ใกล้วันเกิดของ {name} อีก {days} วัน',
+    leaveTypes:[{name:'ลาพักร้อน',quota:10},{name:'ลาป่วย',quota:30},{name:'ลากิจ',quota:3}],
+    locations:[{id:'loc1',name:'สำนักงานใหญ่ ย่งล้ง',lat:13.8,lng:100.5,radius:500,mapUrl:'https://maps.google.com/?q=13.8,100.5'}],
+    holidays:['2026-01-01','2026-04-13','2026-04-14','2026-04-15','2026-12-31'],
+  }
+});
+
+const todayStr=()=>new Date().toISOString().slice(0,10);
+const timeStr=()=>{const n=new Date();return String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0')};
+const fmtD=(s)=>{if(!s)return'-';const d=new Date(s+'T00:00:00');return d.toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'numeric'})};
+const fmtS=(s)=>{if(!s)return'-';const d=new Date(s+'T00:00:00');return d.toLocaleDateString('th-TH',{day:'numeric',month:'short'})};
+const moneyFmt=(n)=>Math.round(n).toLocaleString('th-TH');
+
+function gdist(la1,lo1,la2,lo2){
+  const R=6371000,dr=(la2-la1)*Math.PI/180,dl=(lo2-lo1)*Math.PI/180;
+  const a=Math.sin(dr/2)**2+Math.cos(la1*Math.PI/180)*Math.cos(la2*Math.PI/180)*Math.sin(dl/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+
+function bdayAlerts(emps){
+  const t=new Date();const r=[];
+  emps.forEach(e=>{
+    if(!e.birthday)return;
+    const bMD=e.birthday.slice(5);
+    const bd=new Date(t.getFullYear(),parseInt(bMD.slice(0,2))-1,parseInt(bMD.slice(3)));
+    if(bd<t&&bd.toDateString()!==t.toDateString())bd.setFullYear(t.getFullYear()+1);
+    const diff=Math.round((bd-t)/86400000);
+    if(diff===0)r.push({emp:e,diff:0,type:'today'});
+    else if(diff>0&&diff<=3)r.push({emp:e,diff,type:'soon'});
+  });
+  return r;
+}
+function isBdayToday(emp){
+  if(!emp?.birthday)return false;
+  const t=new Date();
+  return String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0')===emp.birthday.slice(5);
+}
+
+async function sendGS(action,data){
+  if(!GSHEET)return{ok:false};
+  try{
+    const res=await fetch(GSHEET,{
+      method:'POST',mode:'no-cors',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action,data})
+    });
+    return{ok:true};
+  }catch(e){return{ok:false,err:e.message}}
+}
+
+function CatPopup({time,location,name,gsStatus,onClose}){
+  const cats=['😸','🐱','😺','🐈','😻'];
+  const cat=cats[Math.floor(Math.random()*cats.length)];
+  return React.createElement('div',{className:'cat-overlay',onClick:onClose},
+    React.createElement('div',{className:'cat-box',onClick:e=>e.stopPropagation()},
+      React.createElement('span',{className:'cat-emoji'},cat),
+      React.createElement('div',{className:'cat-stars'},'✨ ⭐ ✨ ⭐ ✨'),
+      React.createElement('div',{className:'cat-msg'},'เย้! บันทึกเวลาสำเร็จ!'),
+      React.createElement('div',{style:{fontSize:'14px',color:'var(--text3)',margin:'4px 0'}},`⏰ ${time} น.`),
+      React.createElement('div',{style:{fontSize:'12px',color:'var(--gold)',marginBottom:'6px'}},`📍 ${location}`),
+      React.createElement('div',{style:{fontSize:'12px',marginBottom:'4px'}},
+        gsStatus==='sending'?React.createElement('span',{className:'gs-badge gs-wait'},'⏳ กำลังส่ง Google Sheets...'):
+        gsStatus==='ok'?React.createElement('span',{className:'gs-badge gs-ok'},'✓ บันทึกลง Google Sheets แล้ว'):
+        React.createElement('span',{className:'gs-badge gs-err'},'⚠ ส่ง Sheet ไม่ได้ (บันทึกในเครื่องแล้ว)')
+      ),
+      React.createElement('div',{style:{fontSize:'11.5px',color:'#aaa',marginTop:'4px'}},`สู้ๆ นะ ${name}! 🐾`),
+      React.createElement('button',{className:'cat-close-btn',onClick:onClose},'ปิด 🐾')
+    )
+  );
+}
+
+function App(){
+  const stored=load();
+  const[data,setData]=useState(stored||init());
+  const[view,setView]=useState('checkin');
+  const[user,setUser]=useState(null);
+  const[now,setNow]=useState(new Date());
+  const[al,setAl]=useState(null);
+  const[catPop,setCatPop]=useState(null);
+
+  useEffect(()=>{const t=setInterval(()=>setNow(new Date()),1000);return()=>clearInterval(t)},[]);
+  useEffect(()=>{sv(data)},[data]);
+
+  const showAl=(msg,type='i',dur=3500)=>{setAl({msg,type});setTimeout(()=>setAl(null),dur)};
+  const upd=u=>setData(d=>({...d,...u}));
+  const role=user?.role||'guest';
+  const{employees,records,leaves,settings}=data;
+
+  const getStatus=(empId,dateStr)=>{
+    const emp=employees.find(e=>e.id===empId);
+    const lv=leaves.find(l=>l.empId===empId&&l.status==='approved'&&dateStr>=l.startDate&&dateStr<=l.endDate);
+    if(lv)return{status:'leave',label:'ลา',bx:'bx-p'};
+    const rec=records.filter(r=>r.empId===empId&&r.date===dateStr);
+    if(rec.length>0)return{status:'present',label:'มาทำงาน',bx:'bx-g'};
+    const d=new Date(dateStr+'T00:00:00');
+    const dow=d.getDay();
+    if(emp?.weeklyOff?.includes(dow))return{status:'weekly_off',label:'หยุดประจำสัปดาห์',bx:'bx-gr'};
+    if(settings.holidays.includes(dateStr))return{status:'holiday',label:'หยุดนักขัตฤกษ์',bx:'bx-gr'};
+    if(dateStr>todayStr())return{status:'future',label:'-',bx:'bx-gr'};
+    return{status:'absent',label:'ขาดงาน',bx:'bx-r'};
+  };
+  const getTStat=(t)=>{
+    if(!t)return null;
+    const[h,m]=t.split(':').map(Number);
+    const{onTimeHour:oH,onTimeMin:oM,lateHour:lH,lateMin:lM}=settings;
+    if(h<oH||(h===oH&&m<=oM))return{label:'ตรงเวลา',bx:'bx-g'};
+    if(h<lH||(h===lH&&m<=lM))return{label:'เกือบสาย',bx:'bx-a'};
+    return{label:'สาย',bx:'bx-r'};
+  };
+  const getLeaveUsed=(empId,yr,tp)=>leaves.filter(l=>l.empId===empId&&l.status==='approved'&&l.startDate.startsWith(yr)&&(!tp||l.leaveType===tp)).reduce((s,l)=>s+Math.round((new Date(l.endDate)-new Date(l.startDate))/86400000)+1,0);
+  const bdays=useMemo(()=>bdayAlerts(employees),[employees]);
+  const isBday=isBdayToday(user);
+
+  const navItems=[
+    {key:'checkin',label:'บันทึกเวลา',icon:'⏰'},
+    role==='admin'&&{key:'employees',label:'พนักงาน',icon:'👥'},
+    role==='admin'&&{key:'summary',label:'สรุปผล',icon:'📊'},
+    user&&{key:'leave',label:'การลา',icon:'📋'},
+    role==='admin'&&{key:'settings',label:'ตั้งค่า',icon:'⚙️'},
+  ].filter(Boolean);
+
+  return React.createElement('div',{className:'app'},
+    catPop&&React.createElement(CatPopup,{...catPop,onClose:()=>setCatPop(null)}),
+    React.createElement('div',{className:'sidebar'},
+      React.createElement('div',{className:'logo-area'},
+        React.createElement('img',{src:LOGO,className:'logo-img',alt:'โลโก้',onError:e=>e.target.style.display='none'}),
+        React.createElement('div',{className:'logo-title'},'โรงรับจำนำ'),
+        React.createElement('div',{className:'logo-title',style:{fontSize:'14px',color:'var(--red2)',marginTop:'1px'}},'ย่งล้ง'),
+        React.createElement('div',{className:'logo-sub'},'ระบบบันทึกเวลาทำงาน')
+      ),
+      React.createElement('div',{className:'nav-wrap'},
+        navItems.map(item=>React.createElement('div',{key:item.key,className:'nav-item'+(view===item.key?' active':''),onClick:()=>setView(item.key)},
+          React.createElement('span',{style:{fontSize:'16px'}},item.icon),item.label
+        ))
+      ),
+      user&&React.createElement('div',{className:'user-bar'},
+        React.createElement('div',{className:'user-nm'},user.name),
+        React.createElement('div',{className:'user-rl'},role==='admin'?'ผู้ดูแลระบบ':'พนักงาน'),
+        React.createElement('button',{className:'btn btn-sm',style:{width:'100%',fontSize:'10.5px',marginTop:'6px'},onClick:()=>{setUser(null);setView('checkin')}},'เปลี่ยนผู้ใช้')
+      )
+    ),
+    React.createElement('div',{className:'main'},
+      al&&React.createElement('div',{className:`alert-bar al-${al.type}`},al.msg),
+      isBday&&user&&React.createElement('div',{className:'bday-card bday-today',style:{marginBottom:'1rem'}},
+        React.createElement('span',{style:{fontSize:'28px'}},'🎂'),
+        React.createElement('div',null,
+          React.createElement('div',{style:{fontSize:'13.5px',fontWeight:700,color:'var(--red3)'}},`วันเกิด ${user.name}!`),
+          React.createElement('div',{style:{fontSize:'12.5px',color:'var(--text3)'}},user.bdayMsg||'สุขสันต์วันเกิด!')
+        )
+      ),
+      role==='admin'&&view==='summary'&&bdays.map(a=>React.createElement('div',{key:a.emp.id,className:`bday-card${a.type==='today'?' bday-today':''}`,style:{marginBottom:'.75rem'}},
+        React.createElement('span',{style:{fontSize:'24px'}},a.type==='today'?'🎂':'🎁'),
+        React.createElement('div',null,
+          React.createElement('div',{style:{fontSize:'13px',fontWeight:700,color:'var(--red3)'}},a.type==='today'?`วันเกิด ${a.emp.name} วันนี้!`:settings.bdayAdminMsg.replace('{name}',a.emp.name).replace('{days}',a.diff)),
+          React.createElement('div',{style:{fontSize:'11px',color:'var(--text3)'}},`วันเกิด: ${fmtS(a.emp.birthday)}`)
+        )
+      )),
+      view==='checkin'&&React.createElement(CheckinView,{data,user,setUser,now,records,settings,employees,getTStat,showAl,upd,role,setCatPop,sendGS}),
+      view==='employees'&&role==='admin'&&React.createElement(EmployeesView,{data,upd,showAl,sendGS}),
+      view==='summary'&&role==='admin'&&React.createElement(SummaryView,{data,getStatus,getTStat,records,fmtD,leaves,settings,getLeaveUsed,moneyFmt}),
+      view==='leave'&&user&&React.createElement(LeaveView,{data,upd,user,role,showAl,leaves,employees,settings,getLeaveUsed,fmtD,sendGS}),
+      view==='settings'&&role==='admin'&&React.createElement(SettingsView,{data,upd,showAl})
+    )
+  );
+}
+
+function CheckinView({data,user,setUser,now,records,settings,employees,getTStat,showAl,upd,role,setCatPop,sendGS}){
+  const[selEmp,setSelEmp]=useState('');
+  const[pin,setPin]=useState('');
+
+  if(!user){
+    const doLogin=()=>{
+      const e=data.employees.find(x=>x.id===selEmp&&x.pin===pin);
+      if(e){setUser(e);setPin('')}else showAl('PIN ไม่ถูกต้อง กรุณาลองใหม่','d');
+    };
+    return React.createElement('div',null,
+      React.createElement('div',{className:'page-hdr'},React.createElement('div',null,React.createElement('h2',null,'เข้าสู่ระบบ'),React.createElement('p',null,'เลือกชื่อและกรอก PIN'))),
+      React.createElement('div',{className:'card',style:{maxWidth:380}},
+        React.createElement('div',{style:{textAlign:'center',marginBottom:'1rem'}},
+          React.createElement('img',{src:LOGO,style:{width:'80px',height:'80px',borderRadius:'50%',objectFit:'cover',border:'3px solid var(--gold2)',boxShadow:'0 3px 15px rgba(200,132,26,0.3)'},alt:'โลโก้',onError:e=>e.target.style.display='none'}),
+          React.createElement('div',{style:{fontFamily:"'Noto Serif Thai',serif",fontSize:'15px',fontWeight:700,color:'var(--red3)',marginTop:'8px'}},'โรงรับจำนำย่งล้ง'),
+          React.createElement('div',{style:{fontSize:'11px',color:'var(--text3)',marginTop:'2px'}},'ระบบบันทึกเวลาทำงาน')
+        ),
+        React.createElement('div',{className:'form-group'},
+          React.createElement('label',null,'ชื่อพนักงาน'),
+          React.createElement('select',{value:selEmp,onChange:e=>setSelEmp(e.target.value)},
+            React.createElement('option',{value:''},'— กรุณาเลือกชื่อ —'),
+            data.employees.map(e=>React.createElement('option',{key:e.id,value:e.id},e.name+' ('+e.department+')'))
+          )
+        ),
+        React.createElement('div',{className:'form-group'},
+          React.createElement('label',null,'รหัส PIN'),
+          React.createElement('input',{type:'password',maxLength:6,value:pin,onChange:e=>setPin(e.target.value),onKeyDown:e=>e.key==='Enter'&&doLogin(),placeholder:'กรอก PIN ของคุณ'})
+        ),
+        React.createElement('button',{className:'btn btn-red',style:{width:'100%',fontSize:'14px',padding:'11px'},onClick:doLogin},'เข้าสู่ระบบ')
+      )
+    );
+  }
+
+  const u=user;
+  const td=todayStr();
+  const todayRec=records.filter(r=>r.empId===u.id&&r.date===td);
+  const inR=todayRec.find(r=>r.type==='in');
+  const alreadyIn=!!inR;
+  const ts=inR?getTStat(inR.time):null;
+  const h=String(now.getHours()).padStart(2,'0'),m=String(now.getMinutes()).padStart(2,'0'),s=String(now.getSeconds()).padStart(2,'0');
+  const yrs=Math.max(0,Math.floor((new Date()-new Date(u.startDate+'T00:00:00'))/(365.25*86400000)));
+
+  const doCheckin=()=>{
+    if(alreadyIn)return showAl('บันทึกเวลาเข้าแล้วในวันนี้','w');
+    const proceed=async(locName,lat,lng)=>{
+      const t=timeStr();
+      const rec={id:'r'+Date.now(),empId:u.id,date:td,time:t,type:'in',location:locName,lat,lng,ts:new Date().toISOString()};
+      upd({records:[...records,rec]});
+      setCatPop({time:t,location:locName,name:u.name,gsStatus:'sending'});
+      const gsRes=await sendGS('checkin',{
+        id:rec.id,empId:u.id,empName:u.name,
+        date:td,time:t,location:locName,lat,lng
+      });
+      setCatPop(prev=>prev?{...prev,gsStatus:gsRes.ok?'ok':'error'}:null);
+    };
+    if(navigator.geolocation){
+      navigator.geolocation.getCurrentPosition(pos=>{
+        const{latitude,longitude}=pos.coords;
+        const near=settings.locations.find(l=>gdist(latitude,longitude,l.lat,l.lng)<=l.radius);
+        if(!near){showAl('อยู่นอกพื้นที่ที่อนุญาต ไม่สามารถบันทึกได้','d',5000);return;}
+        proceed(near.name,latitude,longitude);
+      },()=>proceed('ไม่ทราบตำแหน่ง',0,0));
+    } else proceed('ไม่รองรับ GPS',0,0);
+  };
+
+  return React.createElement('div',null,
+    React.createElement('div',{className:'page-hdr'},
+      React.createElement('div',null,
+        React.createElement('h2',null,`สวัสดี, ${u.name} 😊`),
+        React.createElement('p',null,now.toLocaleDateString('th-TH',{weekday:'long',year:'numeric',month:'long',day:'numeric'}))
+      )
+    ),
+    React.createElement('div',{style:{display:'flex',gap:'1rem',flexWrap:'wrap'}},
+      React.createElement('div',{className:'card',style:{flex:'1',minWidth:'280px'}},
+        React.createElement('div',{className:'clock'},`${h}:${m}:${s}`),
+        React.createElement('div',{className:'date-d'},now.toLocaleDateString('th-TH',{weekday:'long',day:'numeric',month:'long'})),
+        React.createElement('button',{className:`chk-btn${alreadyIn?' done':' in'}`,onClick:doCheckin,disabled:alreadyIn},
+          alreadyIn?`✅ บันทึกแล้วเวลา ${inR.time} น.`:'🐾  บันทึกเวลาเข้างาน'
+        ),
+        alreadyIn&&React.createElement('p',{style:{fontSize:'11px',color:'var(--text3)',textAlign:'center',marginTop:'-6px',marginBottom:'10px'}},'บันทึกซ้ำไม่ได้ในวันเดียวกัน'),
+        React.createElement('div',{style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'8px'}},
+          React.createElement('div',{className:'stat-card'},React.createElement('div',{className:'stat-val'},inR?inR.time:'-'),React.createElement('div',{className:'stat-lbl'},'เวลาเข้า')),
+          React.createElement('div',{className:'stat-card'},React.createElement('div',{className:'stat-val',style:{fontSize:'15px'}},inR?inR.location.slice(0,7):'—'),React.createElement('div',{className:'stat-lbl'},'สถานที่'))
+        ),
+        ts&&React.createElement('div',{style:{textAlign:'center',marginTop:'10px'}},React.createElement('span',{className:`bx ${ts.bx}`},ts.label))
+      ),
+      React.createElement('div',{className:'card',style:{flex:'1',minWidth:'220px'}},
+        React.createElement('div',{className:'sec-t'},'ข้อมูลพนักงาน'),
+        [['แผนก',u.department||'-'],['วันเริ่มงาน',fmtD(u.startDate)],['อายุงาน',`${yrs} ปี`],['วันเกิด',fmtD(u.birthday)],['หยุดประจำ',(u.weeklyOff||[]).map(d=>DT[d]).join(', ')||'-']].map(([k,v])=>
+          React.createElement('div',{key:k,style:{display:'flex',justifyContent:'space-between',fontSize:'12.5px',padding:'5px 0',borderBottom:'1px solid rgba(200,132,26,0.1)'}},
+            React.createElement('span',{style:{color:'var(--text3)',fontWeight:500}},k),
+            React.createElement('span',{style:{fontWeight:600}},v)
+          )
+        ),
+        React.createElement('div',{className:'divider'}),
+        React.createElement('div',{className:'sec-t'},'โควต้าลา '+new Date().getFullYear()),
+        (settings.leaveTypes||[]).map(lt=>React.createElement('div',{key:lt.name,style:{marginBottom:'8px'}},
+          React.createElement('div',{style:{display:'flex',justifyContent:'space-between',fontSize:'12px',marginBottom:'3px'}},
+            React.createElement('span',{style:{fontWeight:500}},lt.name),
+            React.createElement('span',{style:{color:'var(--text3)'}},`0/${lt.quota} วัน`)
+          ),
+          React.createElement('div',{className:'pgbar'},React.createElement('div',{className:'pgfill',style:{width:'0%'}}))
+        ))
+      )
+    )
+  );
+}
+
+function EmployeesView({data,upd,showAl,sendGS}){
+  const[modal,setModal]=useState(null);
+  const blank={name:'',department:'',role:'employee',pin:'',startDate:'',birthday:'',weeklyOff:[0],bdayMsg:'สุขสันต์วันเกิด!',salary:'',bankName:'',bankAccount:''};
+  const[form,setForm]=useState(blank);
+  const[edit,setEdit]=useState(null);
+  const tog=(d)=>setForm({...form,weeklyOff:form.weeklyOff.includes(d)?form.weeklyOff.filter(x=>x!==d):[...form.weeklyOff,d]});
+  const save=async()=>{
+    if(!form.name||!form.pin)return showAl('กรุณากรอกชื่อและ PIN','w');
+    const emp={...form,salary:+form.salary};
+    if(edit){
+      upd({employees:data.employees.map(e=>e.id===edit?{...e,...emp}:e)});
+      await sendGS('saveEmployee',{...emp,id:edit});
+    } else {
+      const newEmp={id:'emp'+Date.now(),...emp};
+      upd({employees:[...data.employees,newEmp]});
+      await sendGS('saveEmployee',newEmp);
+    }
+    showAl(edit?'แก้ไขแล้ว':'เพิ่มแล้ว','s');setModal(null);setForm(blank);setEdit(null);
+  };
+  const del=async(id)=>{
+    if(!confirm('ยืนยันลบ?'))return;
+    upd({employees:data.employees.filter(e=>e.id!==id)});
+    await sendGS('deleteEmployee',{id});
+    showAl('ลบแล้ว','s');
+  };
+  const openEdit=(e)=>{setForm({...e,salary:String(e.salary||'')});setEdit(e.id);setModal('form')};
+
+  return React.createElement('div',null,
+    React.createElement('div',{className:'page-hdr'},
+      React.createElement('div',null,React.createElement('h2',null,'👥 พนักงาน'),React.createElement('p',null,'จัดการข้อมูลพนักงานทั้งหมด')),
+      React.createElement('button',{className:'btn btn-red',onClick:()=>{setForm(blank);setEdit(null);setModal('form')}},'+ เพิ่มพนักงาน')
+    ),
+    React.createElement('div',{className:'card',style:{padding:0,overflow:'auto'}},
+      React.createElement('table',null,
+        React.createElement('thead',null,React.createElement('tr',null,['ชื่อ','แผนก','สิทธิ์','วันเริ่มงาน','วันเกิด','หยุดประจำ','เงินเดือน','จัดการ'].map(h=>React.createElement('th',{key:h},h)))),
+        React.createElement('tbody',null,data.employees.map(e=>React.createElement('tr',{key:e.id},
+          React.createElement('td',null,React.createElement('span',{style:{fontWeight:600}},e.name)),
+          React.createElement('td',null,e.department||'-'),
+          React.createElement('td',null,React.createElement('span',{className:e.role==='admin'?'bx bx-a':'bx bx-gr'},e.role==='admin'?'ผู้ดูแล':'พนักงาน')),
+          React.createElement('td',null,fmtD(e.startDate)),
+          React.createElement('td',null,fmtD(e.birthday)),
+          React.createElement('td',null,React.createElement('span',{style:{fontSize:'11px'}},(e.weeklyOff||[]).map(d=>DT[d]).join(', ')||'-')),
+          React.createElement('td',null,React.createElement('span',{style:{fontWeight:600,color:'var(--red3)'}},(e.salary||0).toLocaleString(),' ฿')),
+          React.createElement('td',null,React.createElement('div',{style:{display:'flex',gap:'5px'}},
+            React.createElement('button',{className:'btn btn-xs btn-gold',onClick:()=>openEdit(e)},'✎'),
+            React.createElement('button',{className:'btn btn-xs btn-sm',style:{background:'#FFDDD9',color:'#8B0000',border:'1px solid rgba(184,0,0,0.3)'},onClick:()=>del(e.id)},'✕')
+          ))
+        )))
+      )
+    ),
+    modal==='form'&&React.createElement('div',{className:'overlay',onClick:e=>e.target===e.currentTarget&&setModal(null)},
+      React.createElement('div',{className:'modal'},
+        React.createElement('h3',null,edit?'✎ แก้ไขพนักงาน':'+ เพิ่มพนักงานใหม่'),
+        React.createElement('div',{className:'g2'},
+          React.createElement('div',{className:'form-group'},React.createElement('label',null,'ชื่อ-นามสกุล'),React.createElement('input',{value:form.name,onChange:e=>setForm({...form,name:e.target.value})})),
+          React.createElement('div',{className:'form-group'},React.createElement('label',null,'แผนก'),React.createElement('input',{value:form.department,onChange:e=>setForm({...form,department:e.target.value})}))
+        ),
+        React.createElement('div',{className:'g2'},
+          React.createElement('div',{className:'form-group'},React.createElement('label',null,'สิทธิ์'),
+            React.createElement('select',{value:form.role,onChange:e=>setForm({...form,role:e.target.value})},
+              React.createElement('option',{value:'employee'},'พนักงาน'),React.createElement('option',{value:'admin'},'ผู้ดูแลระบบ')
+            )
+          ),
+          React.createElement('div',{className:'form-group'},React.createElement('label',null,'PIN (4-6 หลัก)'),React.createElement('input',{type:'password',maxLength:6,value:form.pin,onChange:e=>setForm({...form,pin:e.target.value})}))
+        ),
+        React.createElement('div',{className:'g2'},
+          React.createElement('div',{className:'form-group'},React.createElement('label',null,'วันเริ่มงาน'),React.createElement('input',{type:'date',value:form.startDate,onChange:e=>setForm({...form,startDate:e.target.value})})),
+          React.createElement('div',{className:'form-group'},React.createElement('label',null,'วันเกิด'),React.createElement('input',{type:'date',value:form.birthday,onChange:e=>setForm({...form,birthday:e.target.value})}))
+        ),
+        React.createElement('div',{className:'form-group'},React.createElement('label',null,'ข้อความอวยพรวันเกิด'),React.createElement('input',{value:form.bdayMsg,onChange:e=>setForm({...form,bdayMsg:e.target.value})})),
+        React.createElement('div',{className:'divider'}),
+        React.createElement('div',{className:'sec-t'},'ข้อมูลการเงิน'),
+        React.createElement('div',{className:'g3'},
+          React.createElement('div',{className:'form-group'},React.createElement('label',null,'เงินเดือน (฿)'),React.createElement('input',{type:'number',value:form.salary,onChange:e=>setForm({...form,salary:e.target.value})})),
+          React.createElement('div',{className:'form-group'},React.createElement('label',null,'ธนาคาร'),React.createElement('input',{value:form.bankName||'',onChange:e=>setForm({...form,bankName:e.target.value})})),
+          React.createElement('div',{className:'form-group'},React.createElement('label',null,'เลขบัญชี'),React.createElement('input',{value:form.bankAccount||'',onChange:e=>setForm({...form,bankAccount:e.target.value})}))
+        ),
+        React.createElement('div',{className:'form-group'},
+          React.createElement('label',null,'วันหยุดประจำสัปดาห์'),
+          React.createElement('div',{style:{display:'flex',gap:'5px',flexWrap:'wrap',marginTop:'5px'}},
+            DT.map((d,i)=>React.createElement('div',{key:i,className:'day-pill',onClick:()=>tog(i),style:{borderColor:form.weeklyOff.includes(i)?'var(--red2)':'rgba(200,132,26,0.3)',background:form.weeklyOff.includes(i)?'rgba(184,0,0,0.1)':'transparent',color:form.weeklyOff.includes(i)?'var(--red2)':'var(--text3)',border:'1.5px solid'}},d))
+          )
+        ),
+        React.createElement('div',{className:'modal-acts'},
+          React.createElement('button',{className:'btn',onClick:()=>{setModal(null);setEdit(null);setForm(blank)}},'ยกเลิก'),
+          React.createElement('button',{className:'btn btn-red',onClick:save},edit?'บันทึก':'เพิ่ม')
+        )
+      )
+    )
+  );
+}
+
+function SummaryView({data,getStatus,getTStat,records,fmtD,leaves,settings,getLeaveUsed,moneyFmt}){
+  const[month,setMonth]=useState(new Date().toISOString().slice(0,7));
+  const[selEmp,setSelEmp]=useState('all');
+  const employees=data.employees.filter(e=>e.role==='employee');
+  const dates=useMemo(()=>{const[y,m]=month.split('-').map(Number);const n=new Date(y,m,0).getDate();return Array.from({length:n},(_,i)=>month+'-'+String(i+1).padStart(2,'0'))},[month]);
+  const workDays=(eid)=>dates.filter(d=>{const s=getStatus(eid,d).status;return s!=='weekly_off'&&s!=='holiday'&&s!=='future'}).length;
+  const cnt=(eid,st)=>dates.filter(d=>getStatus(eid,d).status===st).length;
+  const cntLate=(eid)=>records.filter(r=>r.empId===eid&&r.type==='in'&&r.date.startsWith(month)).filter(r=>getTStat(r.time)?.label==='สาย').length;
+  const calcPay=(emp)=>Math.round((emp.salary||0)/Math.max(workDays(emp.id),1)*cnt(emp.id,'present'));
+  const filtered=selEmp==='all'?employees:employees.filter(e=>e.id===selEmp);
+  const handleExport=()=>{
+    const rows=[['สรุปผลการมาทำงาน','เดือน:',month],[],['ชื่อ','แผนก','วันทำงาน','มา','ขาด','ลา','สาย','เงินเดือน','จ่ายจริง','ธนาคาร','เลขบัญชี']];
+    filtered.forEach(e=>rows.push([e.name,e.department,workDays(e.id),cnt(e.id,'present'),cnt(e.id,'absent'),cnt(e.id,'leave'),cntLate(e.id),e.salary||0,calcPay(e),e.bankName||'-',e.bankAccount||'-']));
+    const wb=XLSX.utils.book_new();
+    const ws=XLSX.utils.aoa_to_sheet(rows);
+    XLSX.utils.book_append_sheet(wb,ws,'สรุป');
+    XLSX.writeFile(wb,`ย่งล้ง_${month}.xlsx`);
+  };
+  return React.createElement('div',null,
+    React.createElement('div',{className:'page-hdr'},
+      React.createElement('div',null,React.createElement('h2',null,'📊 สรุปผลการมาทำงาน'),React.createElement('p',null,'ภาพรวมรายเดือน')),
+      React.createElement('button',{className:'btn btn-gold',onClick:handleExport},'⬇ Export Excel')
+    ),
+    React.createElement('div',{style:{display:'flex',gap:'10px',marginBottom:'1rem',flexWrap:'wrap'}},
+      React.createElement('div',{className:'form-group',style:{margin:0}},React.createElement('label',null,'เดือน'),React.createElement('input',{type:'month',value:month,onChange:e=>setMonth(e.target.value),style:{width:'auto'}})),
+      React.createElement('div',{className:'form-group',style:{margin:0}},React.createElement('label',null,'พนักงาน'),
+        React.createElement('select',{value:selEmp,onChange:e=>setSelEmp(e.target.value),style:{width:'auto'}},
+          React.createElement('option',{value:'all'},'ทุกคน'),
+          employees.map(e=>React.createElement('option',{key:e.id,value:e.id},e.name))
+        )
+      )
+    ),
+    React.createElement('div',{className:'card',style:{padding:0,overflow:'auto'}},
+      React.createElement('table',null,
+        React.createElement('thead',null,React.createElement('tr',null,['พนักงาน','วันทำงาน','มา','ขาด','ลา','สาย','เงินเดือน','จ่ายจริง','ธนาคาร'].map(h=>React.createElement('th',{key:h},h)))),
+        React.createElement('tbody',null,filtered.map(e=>React.createElement('tr',{key:e.id},
+          React.createElement('td',null,React.createElement('div',{style:{fontWeight:600}},e.name),React.createElement('div',{style:{fontSize:'10.5px',color:'var(--text3)'}},e.department)),
+          React.createElement('td',{style:{textAlign:'center',color:'var(--text3)'}},workDays(e.id)),
+          React.createElement('td',{style:{textAlign:'center',fontWeight:700,color:'#1A5A00'}},cnt(e.id,'present')),
+          React.createElement('td',{style:{textAlign:'center',fontWeight:700,color:'#8B0000'}},cnt(e.id,'absent')),
+          React.createElement('td',{style:{textAlign:'center',fontWeight:700,color:'#7A0040'}},cnt(e.id,'leave')),
+          React.createElement('td',{style:{textAlign:'center',fontWeight:700,color:'#7A4500'}},cntLate(e.id)),
+          React.createElement('td',{style:{fontSize:'12px',color:'var(--text3)'}},moneyFmt(e.salary||0),' ฿'),
+          React.createElement('td',{style:{fontWeight:700,color:'var(--red3)'}},moneyFmt(calcPay(e)),' ฿'),
+          React.createElement('td',{style:{fontSize:'11px',color:'var(--text3)'}},e.bankName||'-')
+        )))
+      )
+    ),
+    selEmp!=='all'&&React.createElement('div',{className:'card',style:{marginTop:'1rem',padding:0,overflow:'auto'}},
+      React.createElement('div',{style:{padding:'1rem 1.1rem .5rem'}},React.createElement('div',{className:'sec-t'},'รายละเอียดรายวัน')),
+      React.createElement('table',null,
+        React.createElement('thead',null,React.createElement('tr',null,['วันที่','สถานะ','เวลาเข้า','สถานะเวลา','สถานที่'].map(h=>React.createElement('th',{key:h},h)))),
+        React.createElement('tbody',null,dates.map(d=>{
+          const st=getStatus(selEmp,d);
+          const inR=records.find(r=>r.empId===selEmp&&r.date===d&&r.type==='in');
+          const ts=inR?getTStat(inR.time):null;
+          return React.createElement('tr',{key:d},
+            React.createElement('td',null,new Date(d+'T00:00:00').toLocaleDateString('th-TH',{weekday:'short',day:'numeric',month:'short'})),
+            React.createElement('td',null,React.createElement('span',{className:`bx ${st.bx}`},st.label)),
+            React.createElement('td',null,inR?inR.time:'-'),
+            React.createElement('td',null,ts?React.createElement('span',{className:`bx ${ts.bx}`},ts.label):'-'),
+            React.createElement('td',null,inR?React.createElement('span',{style:{fontSize:'11px',color:'var(--text3)'}},inR.location):'-')
+          );
+        }))
+      )
+    )
+  );
+}
+
+function LeaveView({data,upd,user,role,showAl,leaves,employees,settings,getLeaveUsed,fmtD,sendGS}){
+  const[tab,setTab]=useState('my');
+  const blank={empId:user?.id||'',leaveType:'',startDate:'',endDate:'',reason:''};
+  const[form,setForm]=useState(blank);
+  const yr=String(new Date().getFullYear());
+  const submit=async()=>{
+    if(!form.empId||!form.leaveType||!form.startDate||!form.endDate||!form.reason)return showAl('กรุณากรอกให้ครบ','w');
+    if(form.startDate>form.endDate)return showAl('วันที่ไม่ถูกต้อง','w');
+    const days=Math.round((new Date(form.endDate)-new Date(form.startDate))/86400000)+1;
+    const lt=settings.leaveTypes?.find(t=>t.name===form.leaveType);
+    const used=getLeaveUsed(form.empId,yr,form.leaveType);
+    if(lt&&used+days>lt.quota){showAl(`โควต้า${lt.name}เหลือ ${lt.quota-used} วัน`,'w');return;}
+    const lv={id:'l'+Date.now(),...form,days,status:'pending',submittedAt:new Date().toISOString()};
+    const emp=employees.find(e=>e.id===form.empId);
+    upd({leaves:[...leaves,lv]});
+    await sendGS('saveLeave',{...lv,empName:emp?.name||''});
+    setForm(blank);showAl('ส่งคำขอลาแล้ว รอการอนุมัติ','s');
+  };
+  const updL=async(id,st)=>{
+    upd({leaves:leaves.map(l=>l.id===id?{...l,status:st}:l)});
+    await sendGS('updateLeave',{id,status:st});
+    showAl(st==='approved'?'อนุมัติแล้ว':'ปฏิเสธแล้ว',st==='approved'?'s':'w');
+  };
+  const myL=leaves.filter(l=>l.empId===user?.id).sort((a,b)=>b.submittedAt.localeCompare(a.submittedAt));
+  const allL=[...leaves].sort((a,b)=>b.submittedAt.localeCompare(a.submittedAt));
+  const disp=tab==='my'?myL:allL;
+  return React.createElement('div',null,
+    React.createElement('div',{className:'page-hdr'},React.createElement('div',null,React.createElement('h2',null,'📋 การลา'),React.createElement('p',null,'ส่งคำขอและติดตามสถานะ'))),
+    role!=='admin'&&React.createElement('div',{className:'card'},
+      React.createElement('div',{className:'sec-t'},'โควต้าลาของฉัน '+yr),
+      (settings.leaveTypes||[]).map(lt=>{
+        const u=getLeaveUsed(user?.id,yr,lt.name);
+        const pct=lt.quota>0?Math.round((u/lt.quota)*100):0;
+        return React.createElement('div',{key:lt.name,style:{marginBottom:'9px'}},
+          React.createElement('div',{style:{display:'flex',justifyContent:'space-between',fontSize:'12.5px',marginBottom:'3px'}},
+            React.createElement('span',{style:{fontWeight:600}},lt.name),
+            React.createElement('span',{style:{color:'var(--text3)'}},`${u}/${lt.quota} วัน`)
+          ),
+          React.createElement('div',{className:'pgbar'},React.createElement('div',{className:'pgfill',style:{width:`${Math.min(pct,100)}%`}}))
+        );
+      })
+    ),
+    React.createElement('div',{className:'card'},
+      React.createElement('div',{className:'sec-t'},'ส่งคำขอลาใหม่'),
+      role==='admin'&&React.createElement('div',{className:'form-group'},React.createElement('label',null,'พนักงาน'),
+        React.createElement('select',{value:form.empId,onChange:e=>setForm({...form,empId:e.target.value})},
+          React.createElement('option',{value:''},'— เลือกพนักงาน —'),
+          employees.filter(e=>e.role==='employee').map(e=>React.createElement('option',{key:e.id,value:e.id},e.name))
+        )
+      ),
+      React.createElement('div',{className:'g2'},
+        React.createElement('div',{className:'form-group'},React.createElement('label',null,'ประเภทการลา'),
+          React.createElement('select',{value:form.leaveType,onChange:e=>setForm({...form,leaveType:e.target.value})},
+            React.createElement('option',{value:''},'— เลือกประเภท —'),
+            (settings.leaveTypes||[]).map(lt=>React.createElement('option',{key:lt.name,value:lt.name},lt.name))
+          )
+        ),
+        React.createElement('div',{className:'form-group'},React.createElement('label',null,'เหตุผลการลา'),React.createElement('input',{value:form.reason,onChange:e=>setForm({...form,reason:e.target.value}),placeholder:'ระบุเหตุผล'}))
+      ),
+      React.createElement('div',{className:'g2'},
+        React.createElement('div',{className:'form-group'},React.createElement('label',null,'วันที่เริ่มลา'),React.createElement('input',{type:'date',value:form.startDate,onChange:e=>setForm({...form,startDate:e.target.value})})),
+        React.createElement('div',{className:'form-group'},React.createElement('label',null,'วันที่สิ้นสุด'),React.createElement('input',{type:'date',value:form.endDate,onChange:e=>setForm({...form,endDate:e.target.value})}))
+      ),
+      React.createElement('button',{className:'btn btn-red',style:{fontSize:'13.5px'},onClick:submit},'ส่งคำขอลา')
+    ),
+    React.createElement('div',{className:'tabs'},
+      React.createElement('div',{className:`tab${tab==='my'?' active':''}`,onClick:()=>setTab('my')},'การลาของฉัน'),
+      role==='admin'&&React.createElement('div',{className:`tab${tab==='all'?' active':''}`,onClick:()=>setTab('all')},'คำขอทั้งหมด')
+    ),
+    React.createElement('div',{className:'card',style:{padding:0,overflow:'auto'}},
+      disp.length===0?React.createElement('p',{style:{padding:'1.4rem',textAlign:'center',color:'var(--text3)',fontSize:'13px'}},'ยังไม่มีรายการ'):
+      React.createElement('table',null,
+        React.createElement('thead',null,React.createElement('tr',null,[...(tab==='all'?['พนักงาน']:[]),'ประเภท','ช่วงวันที่','จำนวน','เหตุผล','สถานะ',...(role==='admin'&&tab==='all'?['ดำเนินการ']:[])].map(h=>React.createElement('th',{key:h},h)))),
+        React.createElement('tbody',null,disp.map(l=>{
+          const emp=employees.find(e=>e.id===l.empId);
+          return React.createElement('tr',{key:l.id},
+            tab==='all'&&React.createElement('td',null,React.createElement('span',{style:{fontWeight:600}},emp?.name||'-')),
+            React.createElement('td',null,React.createElement('span',{className:'bx bx-b'},l.leaveType||'ลา')),
+            React.createElement('td',null,`${fmtD(l.startDate)} – ${fmtD(l.endDate)}`),
+            React.createElement('td',{style:{textAlign:'center',fontWeight:600}},`${l.days} วัน`),
+            React.createElement('td',null,l.reason),
+            React.createElement('td',null,React.createElement('span',{className:l.status==='approved'?'bx bx-g':l.status==='rejected'?'bx bx-r':'bx bx-a'},l.status==='approved'?'อนุมัติ':l.status==='rejected'?'ปฏิเสธ':'รออนุมัติ')),
+            role==='admin'&&tab==='all'&&React.createElement('td',null,l.status==='pending'&&React.createElement('div',{style:{display:'flex',gap:'4px'}},
+              React.createElement('button',{className:'btn btn-xs btn-green',onClick:()=>updL(l.id,'approved')},'✓ อนุมัติ'),
+              React.createElement('button',{className:'btn btn-xs',style:{background:'#FFDDD9',color:'#8B0000',border:'1px solid rgba(184,0,0,0.3)'},onClick:()=>updL(l.id,'rejected')},'✗ ปฏิเสธ')
+            ))
+          );
+        }))
+      )
+    )
+  );
+}
+
+function SettingsView({data,upd,showAl}){
+  const[s,setS]=useState({...data.settings});
+  const[lt,setLt]=useState(data.settings.leaveTypes||[]);
+  const[nl,setNl]=useState({name:'',lat:'',lng:'',radius:300,mapUrl:''});
+  const[nh,setNh]=useState('');
+  const[gm,setGm]=useState('');
+  const[mode,setMode]=useState('manual');
+  const parseG=(url)=>{const m=url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);if(m)return{lat:parseFloat(m[1]),lng:parseFloat(m[2])};const m2=url.match(/q=(-?\d+\.\d+),(-?\d+\.\d+)/);return m2?{lat:parseFloat(m2[1]),lng:parseFloat(m2[2])}:null};
+  const applyG=()=>{const p=parseG(gm);if(!p)return showAl('ดึงพิกัดไม่ได้','w');setNl({...nl,lat:p.lat,lng:p.lng,mapUrl:gm});showAl(`พิกัด: ${p.lat.toFixed(5)}, ${p.lng.toFixed(5)}`,'s')};
+  const addLoc=()=>{if(!nl.name||!nl.lat||!nl.lng)return showAl('กรอกให้ครบ','w');setS({...s,locations:[...s.locations,{id:'loc'+Date.now(),...nl,lat:parseFloat(nl.lat),lng:parseFloat(nl.lng)}]});setNl({name:'',lat:'',lng:'',radius:300,mapUrl:''});setGm('');showAl('เพิ่มสถานที่แล้ว','s')};
+  const save=()=>{upd({settings:{...s,leaveTypes:lt}});showAl('บันทึกแล้ว','s')};
+  return React.createElement('div',null,
+    React.createElement('div',{className:'page-hdr'},React.createElement('div',null,React.createElement('h2',null,'⚙️ ตั้งค่าระบบ'))),
+    React.createElement('div',{className:'card'},
+      React.createElement('div',{className:'sec-t'},'เวลาทำงาน'),
+      React.createElement('div',{className:'g2'},
+        React.createElement('div',{className:'form-group'},React.createElement('label',null,'ตรงเวลาก่อน'),
+          React.createElement('div',{style:{display:'flex',gap:'5px',alignItems:'center'}},
+            React.createElement('input',{type:'number',min:0,max:23,value:s.onTimeHour,onChange:e=>setS({...s,onTimeHour:+e.target.value}),style:{width:'65px'}}),
+            React.createElement('span',{style:{color:'var(--text3)',fontSize:'11px'}},'ชม.'),
+            React.createElement('input',{type:'number',min:0,max:59,value:s.onTimeMin,onChange:e=>setS({...s,onTimeMin:+e.target.value}),style:{width:'65px'}}),
+            React.createElement('span',{style:{color:'var(--text3)',fontSize:'11px'}},'นาที')
+          )
+        ),
+        React.createElement('div',{className:'form-group'},React.createElement('label',null,'สายหลัง'),
+          React.createElement('div',{style:{display:'flex',gap:'5px',alignItems:'center'}},
+            React.createElement('input',{type:'number',min:0,max:23,value:s.lateHour,onChange:e=>setS({...s,lateHour:+e.target.value}),style:{width:'65px'}}),
+            React.createElement('span',{style:{color:'var(--text3)',fontSize:'11px'}},'ชม.'),
+            React.createElement('input',{type:'number',min:0,max:59,value:s.lateMin,onChange:e=>setS({...s,lateMin:+e.target.value}),style:{width:'65px'}}),
+            React.createElement('span',{style:{color:'var(--text3)',fontSize:'11px'}},'นาที')
+          )
+        )
+      ),
+      React.createElement('div',{className:'form-group'},React.createElement('label',null,'ข้อความแจ้งเตือนวันเกิด (ใช้ {name} {days})'),React.createElement('input',{value:s.bdayAdminMsg,onChange:e=>setS({...s,bdayAdminMsg:e.target.value})}))
+    ),
+    React.createElement('div',{className:'card'},
+      React.createElement('div',{className:'sec-t'},'ประเภทการลา'),
+      lt.map((l,i)=>React.createElement('div',{key:i,className:'g2',style:{marginBottom:'8px'}},
+        React.createElement('div',{className:'form-group',style:{margin:0}},React.createElement('label',null,'ชื่อประเภท'),React.createElement('input',{value:l.name,onChange:e=>{const a=[...lt];a[i]={...a[i],name:e.target.value};setLt(a)}})),
+        React.createElement('div',{className:'form-group',style:{margin:0}},React.createElement('label',null,'วัน/ปี'),
+          React.createElement('div',{style:{display:'flex',gap:'6px'}},
+            React.createElement('input',{type:'number',min:0,value:l.quota,onChange:e=>{const a=[...lt];a[i]={...a[i],quota:+e.target.value};setLt(a)}}),
+            i>0&&React.createElement('button',{className:'btn btn-xs',style:{background:'#FFDDD9',color:'#8B0000',border:'1px solid rgba(184,0,0,0.3)',flexShrink:0},onClick:()=>setLt(lt.filter((_,j)=>j!==i))},'ลบ')
+          )
+        )
+      )),
+      React.createElement('button',{className:'btn btn-sm',style:{marginTop:'5px'},onClick:()=>setLt([...lt,{name:'ประเภทใหม่',quota:0}])},'+ เพิ่มประเภทลา')
+    ),
+    React.createElement('div',{className:'card'},
+      React.createElement('div',{className:'sec-t'},'สถานที่อนุญาต'),
+      s.locations.map(loc=>React.createElement('div',{key:loc.id,style:{display:'flex',justifyContent:'space-between',alignItems:'flex-start',padding:'8px 0',borderBottom:'1px solid rgba(200,132,26,0.15)'}},
+        React.createElement('div',null,
+          React.createElement('div',{style:{fontWeight:600,fontSize:'13px'}},loc.name),
+          React.createElement('div',{style:{fontSize:'11px',color:'var(--text3)',marginTop:'2px'}},`${loc.lat}, ${loc.lng} | รัศมี ${loc.radius}m`),
+          loc.mapUrl&&React.createElement('a',{href:loc.mapUrl,style:{fontSize:'10.5px',color:'#0066CC',display:'block',marginTop:'2px'}},'🗺 ดูบน Google Maps')
+        ),
+        React.createElement('button',{className:'btn btn-xs',style:{background:'#FFDDD9',color:'#8B0000',border:'1px solid rgba(184,0,0,0.3)'},onClick:()=>setS({...s,locations:s.locations.filter(l=>l.id!==loc.id)})},'ลบ')
+      )),
+      React.createElement('div',{className:'divider'}),
+      React.createElement('div',{className:'sec-t'},'เพิ่มสถานที่ใหม่'),
+      React.createElement('div',{style:{display:'flex',gap:'7px',marginBottom:'10px'}},
+        React.createElement('button',{className:`btn btn-sm${mode==='manual'?' btn-red':''}`,onClick:()=>setMode('manual')},'กรอกพิกัด'),
+        React.createElement('button',{className:`btn btn-sm${mode==='gmap'?' btn-red':''}`,onClick:()=>setMode('gmap')},'📍 Google Maps URL')
+      ),
+      mode==='gmap'&&React.createElement('div',{className:'form-group'},
+        React.createElement('label',null,'วาง Google Maps URL'),
+        React.createElement('div',{style:{display:'flex',gap:'6px'}},
+          React.createElement('input',{value:gm,onChange:e=>setGm(e.target.value),placeholder:'https://maps.google.com/...'}),
+          React.createElement('button',{className:'btn btn-sm btn-gold',onClick:applyG,style:{flexShrink:0}},'ดึงพิกัด')
+        )
+      ),
+      React.createElement('div',{className:'g2'},
+        React.createElement('div',{className:'form-group'},React.createElement('label',null,'ชื่อสถานที่'),React.createElement('input',{value:nl.name,onChange:e=>setNl({...nl,name:e.target.value})})),
+        React.createElement('div',{className:'form-group'},React.createElement('label',null,'รัศมี (เมตร)'),React.createElement('input',{type:'number',value:nl.radius,onChange:e=>setNl({...nl,radius:+e.target.value})}))
+      ),
+      React.createElement('div',{className:'g2'},
+        React.createElement('div',{className:'form-group'},React.createElement('label',null,'Latitude'),React.createElement('input',{type:'number',step:'0.00001',value:nl.lat,onChange:e=>setNl({...nl,lat:e.target.value})})),
+        React.createElement('div',{className:'form-group'},React.createElement('label',null,'Longitude'),React.createElement('input',{type:'number',step:'0.00001',value:nl.lng,onChange:e=>setNl({...nl,lng:e.target.value})}))
+      ),
+      nl.lat&&nl.lng&&React.createElement('a',{href:`https://maps.google.com/?q=${nl.lat},${nl.lng}`,style:{fontSize:'11px',color:'#0066CC',display:'block',marginBottom:'8px'}},`🗺 ดูตำแหน่งบน Google Maps`),
+      React.createElement('button',{className:'btn btn-sm btn-red',onClick:addLoc},'+ เพิ่มสถานที่')
+    ),
+    React.createElement('div',{className:'card'},
+      React.createElement('div',{className:'sec-t'},'วันหยุดนักขัตฤกษ์'),
+      React.createElement('div',{style:{display:'flex',gap:'7px',marginBottom:'10px'}},
+        React.createElement('input',{type:'date',value:nh,onChange:e=>setNh(e.target.value),style:{width:'auto'}}),
+        React.createElement('button',{className:'btn btn-sm btn-red',onClick:()=>{if(nh&&!s.holidays.includes(nh)){setS({...s,holidays:[...s.holidays,nh].sort()});setNh('')}}},'+ เพิ่ม')
+      ),
+      React.createElement('div',{style:{display:'flex',flexWrap:'wrap',gap:'6px'}},
+        s.holidays.map(h=>React.createElement('div',{key:h,style:{display:'flex',alignItems:'center',gap:'4px',background:'rgba(184,0,0,0.07)',padding:'4px 9px',borderRadius:'20px',fontSize:'11px',border:'1.5px solid rgba(184,0,0,0.2)',color:'var(--text2)',fontWeight:500}},
+          new Date(h+'T00:00:00').toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'2-digit'}),
+          React.createElement('span',{onClick:()=>setS({...s,holidays:s.holidays.filter(x=>x!==h)}),style:{cursor:'pointer',color:'var(--red2)',marginLeft:'3px',fontWeight:700}},'×')
+        ))
+      )
+    ),
+    React.createElement('div',{style:{display:'flex',justifyContent:'flex-end'}},
+      React.createElement('button',{className:'btn btn-red',style:{padding:'10px 24px',fontSize:'13.5px'},onClick:save},'💾 บันทึกการตั้งค่า')
+    )
+  );
+}
+
+ReactDOM.render(React.createElement(App),document.getElementById('root'));
+</script>
+</body>
+</html>
