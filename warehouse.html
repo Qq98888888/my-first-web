@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Digital Twin คลังสินค้า 3D</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#05080e;--frame:#0a101a;--panel:#0e1624;--panel2:#121c2d;--line:#1f2c42;
+  --txt:#e6edf6;--mut:#8796ab;--dim:#5b6a80;
+  --cyan:#22d3ee;--green:#34d399;--amber:#fbbf24;--orange:#fb923c;--red:#f87171;--violet:#a78bfa;
+}
+html,body{height:100%;background:var(--bg);color:var(--txt);font-family:'IBM Plex Sans Thai',sans-serif;overflow:hidden;-webkit-tap-highlight-color:transparent}
+body{display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(ellipse at 50% 0%,#0f1d33 0%,var(--bg) 60%)}
+.mono{font-family:'JetBrains Mono',monospace}
+
+/* ---------- 9:16 portrait frame ---------- */
+.frame{height:100vh;height:100dvh;width:min(100vw,calc(100dvh * 9 / 16));
+  background:var(--frame);display:flex;flex-direction:column;position:relative;overflow:hidden;
+  box-shadow:0 0 0 1px var(--line),0 30px 80px rgba(0,0,0,.6)}
+@media (min-aspect-ratio:9/16){.frame{border-radius:0}}
+
+/* header */
+.hdr{display:flex;align-items:center;gap:10px;padding:10px 14px 8px;border-bottom:1px solid var(--line);
+  background:linear-gradient(180deg,#101a2b,transparent)}
+.logo{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;flex-shrink:0;
+  background:linear-gradient(135deg,#0e7490,#22d3ee);box-shadow:0 0 16px rgba(34,211,238,.35)}
+.logo svg{width:20px;height:20px}
+.ttl{flex:1;min-width:0}
+.ttl h1{font-size:15px;font-weight:700;letter-spacing:.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ttl .sub{font-size:10.5px;color:var(--mut);display:flex;gap:8px;align-items:center;white-space:nowrap}
+.live{display:inline-flex;align-items:center;gap:4px;color:var(--green);font-weight:600}
+.live i{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:blink 1.4s infinite}
+@keyframes blink{50%{opacity:.25}}
+.clock{text-align:right;font-size:15px;font-weight:700;color:var(--cyan);line-height:1.1}
+.clock small{display:block;font-size:9.5px;color:var(--mut);font-family:'IBM Plex Sans Thai';font-weight:500}
+
+/* KPI */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:8px 10px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:7px 8px;min-width:0}
+.kpi .l{font-size:9.5px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kpi .v{font-size:16px;font-weight:700;margin-top:1px;white-space:nowrap}
+.kpi .v small{font-size:10px;color:var(--mut);font-weight:500;margin-left:2px}
+.kpi .bar{height:3px;border-radius:2px;background:var(--line);margin-top:4px;overflow:hidden}
+.kpi .bar b{display:block;height:100%;background:var(--cyan);transition:width .6s}
+.kpi.in .v{color:var(--green)} .kpi.out .v{color:var(--orange)}
+
+/* 3D viewport */
+.view{flex:1;min-height:0;position:relative;margin:0 10px;border-radius:14px;overflow:hidden;
+  border:1px solid var(--line);background:#0b1220}
+.view canvas{display:block;width:100%;height:100%;touch-action:none}
+.ov{position:absolute;pointer-events:none;z-index:2}
+.ov > *{pointer-events:auto}
+.ov-top{top:8px;left:8px;right:8px;display:flex;flex-direction:column;gap:6px}
+.search{position:relative;z-index:5}
+.search input{width:100%;height:34px;border-radius:9px;border:1px solid var(--line);background:rgba(10,16,26,.85);
+  backdrop-filter:blur(8px);color:var(--txt);padding:0 10px 0 32px;font:inherit;font-size:12.5px;outline:none}
+.search input:focus{border-color:var(--cyan)}
+.search svg{position:absolute;left:10px;top:9px;width:16px;height:16px;opacity:.6;z-index:1;pointer-events:none}
+.results{position:absolute;top:38px;left:0;right:0;background:rgba(12,19,31,.97);border:1px solid var(--line);
+  border-radius:10px;overflow:hidden;display:none;max-height:210px;overflow-y:auto}
+.results.show{display:block}
+.res{padding:7px 10px;font-size:12px;display:flex;justify-content:space-between;gap:8px;cursor:pointer;border-bottom:1px solid var(--line)}
+.res:last-child{border-bottom:0}
+.res:hover,.res:active{background:var(--panel2)}
+.res .loc{color:var(--cyan);font-family:'JetBrains Mono';font-size:11px;white-space:nowrap}
+.chips{display:flex;gap:5px;flex-wrap:wrap}
+.chip{height:28px;padding:0 10px;border-radius:14px;border:1px solid var(--line);background:rgba(10,16,26,.85);
+  backdrop-filter:blur(8px);color:var(--mut);font:inherit;font-size:11.5px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:5px}
+.chip.on{color:#04131a;background:var(--cyan);border-color:var(--cyan)}
+.chip .badge{background:var(--red);color:#fff;border-radius:8px;font-size:9.5px;padding:0 5px;line-height:15px}
+.ov-right{right:8px;bottom:8px;display:flex;flex-direction:column;gap:6px}
+.ibtn{width:34px;height:34px;border-radius:9px;border:1px solid var(--line);background:rgba(10,16,26,.85);
+  backdrop-filter:blur(8px);color:var(--txt);cursor:pointer;display:grid;place-items:center;font-size:11px;font-weight:700}
+.ibtn svg{width:17px;height:17px}
+.ibtn.on{border-color:var(--cyan);color:var(--cyan)}
+.legend{left:8px;bottom:8px;background:rgba(10,16,26,.85);backdrop-filter:blur(8px);border:1px solid var(--line);
+  border-radius:8px;padding:4px 7px;font-size:9.5px;color:var(--mut);display:flex;flex-direction:column;gap:2px;max-width:calc(100% - 60px)}
+.legend .row{display:flex;align-items:center;gap:3px 7px;flex-wrap:wrap}
+.legend .row .row{gap:3px}
+.legend .sw{width:9px;height:9px;border-radius:2px;display:inline-block}
+.legend .grad{width:90px;height:7px;border-radius:4px;background:linear-gradient(90deg,#22c55e,#eab308,#ef4444)}
+.toast{position:absolute;left:50%;top:84px;transform:translate(-50%,-10px);background:rgba(12,19,31,.95);
+  border:1px solid var(--cyan);color:var(--txt);font-size:11.5px;padding:6px 12px;border-radius:16px;opacity:0;
+  transition:all .3s;pointer-events:none;z-index:3;white-space:nowrap}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.loading{position:absolute;inset:0;display:grid;place-items:center;color:var(--mut);font-size:12px;z-index:1}
+
+/* bottom sheet */
+.sheet{height:34%;min-height:220px;display:flex;flex-direction:column;padding:8px 10px 10px}
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;background:var(--panel);border:1px solid var(--line);
+  border-radius:11px;padding:3px}
+.tab{height:30px;border:0;border-radius:8px;background:transparent;color:var(--mut);font:inherit;font-size:12px;font-weight:600;cursor:pointer;position:relative}
+.tab.on{background:var(--panel2);color:var(--txt);box-shadow:inset 0 0 0 1px var(--line)}
+.tab .dot{position:absolute;top:5px;right:8px;width:6px;height:6px;border-radius:50%;background:var(--red)}
+.pane{flex:1;min-height:0;overflow-y:auto;margin-top:8px;display:none;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+.pane.on{display:block}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:9px 10px;margin-bottom:7px}
+.card h3{font-size:11px;color:var(--mut);font-weight:600;margin-bottom:6px;display:flex;justify-content:space-between}
+.zrow{display:grid;grid-template-columns:22px 1fr 42px;align-items:center;gap:8px;font-size:11.5px;padding:3px 0;cursor:pointer}
+.zrow .z{font-weight:700;color:var(--cyan);font-family:'JetBrains Mono'}
+.track{height:7px;border-radius:4px;background:var(--line);overflow:hidden}
+.track b{display:block;height:100%;border-radius:4px;transition:width .6s}
+.zrow .p{text-align:right;font-family:'JetBrains Mono';font-size:11px}
+.agv{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;font-size:11.5px;padding:5px 0;border-top:1px solid var(--line);cursor:pointer}
+.agv:first-of-type{border-top:0}
+.agv .ic{width:22px;height:22px;border-radius:6px;display:grid;place-items:center;font-size:9px;font-weight:700;color:#071018;font-family:'JetBrains Mono'}
+.agv .st{font-size:10.5px;color:var(--mut)}
+.agv .bat{font-family:'JetBrains Mono';font-size:10.5px}
+.agv.follow{background:rgba(34,211,238,.06);border-radius:7px}
+.empty{color:var(--dim);font-size:12px;text-align:center;padding:22px 10px;line-height:1.7}
+.det-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.det-loc{font-family:'JetBrains Mono';font-size:18px;font-weight:700;color:var(--cyan)}
+.det-name{font-size:13.5px;font-weight:600;margin-top:2px}
+.det-sku{font-size:10.5px;color:var(--mut);font-family:'JetBrains Mono'}
+.pill{font-size:10px;font-weight:700;border-radius:10px;padding:2px 8px;white-space:nowrap}
+.pill.ok{background:rgba(52,211,153,.15);color:var(--green)}
+.pill.low{background:rgba(251,191,36,.15);color:var(--amber)}
+.pill.zero{background:rgba(248,113,113,.15);color:var(--red)}
+.pill.busy{background:rgba(34,211,238,.15);color:var(--cyan)}
+.qty{display:flex;align-items:baseline;gap:4px;margin:8px 0 4px}
+.qty b{font-size:22px;font-family:'JetBrains Mono'}
+.qty span{color:var(--mut);font-size:11px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
+.kv{background:var(--panel2);border-radius:8px;padding:6px 8px}
+.kv .k{font-size:9.5px;color:var(--mut)} .kv .vv{font-size:11.5px;font-weight:600;margin-top:1px}
+.acts{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
+.btn{height:34px;border-radius:9px;border:1px solid var(--line);font:inherit;font-size:12px;font-weight:700;cursor:pointer;color:var(--txt);background:var(--panel2)}
+.btn.in{border-color:rgba(52,211,153,.5);color:var(--green)}
+.btn.out{border-color:rgba(251,146,60,.5);color:var(--orange)}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+.hist{margin-top:8px;font-size:11px}
+.hist div{display:flex;justify-content:space-between;padding:3px 0;border-top:1px dashed var(--line);color:var(--mut)}
+.alert{display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:9px;background:var(--panel);border:1px solid var(--line);margin-bottom:5px;cursor:pointer;font-size:11.5px}
+.alert .loc{font-family:'JetBrains Mono';color:var(--cyan);font-size:11px;min-width:76px}
+.alert .nm{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.log{display:grid;grid-template-columns:44px 16px 1fr;gap:6px;font-size:11.5px;padding:5px 2px;border-bottom:1px solid var(--line);align-items:start}
+.log .t{font-family:'JetBrains Mono';font-size:10px;color:var(--dim);padding-top:2px}
+.log .i{font-size:11px;text-align:center}
+.log.newi{animation:flash 1.2s}
+@keyframes flash{from{background:rgba(34,211,238,.15)}to{background:transparent}}
+.cats{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:10.5px;color:var(--mut)}
+.cats span{display:inline-flex;align-items:center;gap:4px}
+</style>
+<script type="importmap">
+{"imports":{
+  "three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+}}
+</script>
+</head>
+<body>
+<div class="frame">
+  <header class="hdr">
+    <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#04131a" stroke-width="2.2" stroke-linejoin="round"><path d="M3 9l9-5 9 5v11H3z"/><path d="M7 20v-7h10v7M7 16h10"/></svg></div>
+    <div class="ttl">
+      <h1>Digital Twin คลังสินค้า</h1>
+      <div class="sub"><span class="live"><i></i>LIVE</span><span id="env">26.4°C · 58%RH</span></div>
+    </div>
+    <div class="clock mono"><span id="clk">--:--:--</span><small id="dte">-</small></div>
+  </header>
+
+  <section class="kpis">
+    <div class="kpi"><div class="l">ใช้พื้นที่</div><div class="v mono" id="kOcc">0<small>%</small></div><div class="bar"><b id="kOccBar" style="width:0"></b></div></div>
+    <div class="kpi"><div class="l">สต็อกรวม</div><div class="v mono" id="kStock">0</div><div class="l" id="kSku" style="margin-top:3px">0 SKU</div></div>
+    <div class="kpi in"><div class="l">▲ รับเข้าวันนี้</div><div class="v mono" id="kIn">0</div><div class="l" id="kInT" style="margin-top:3px">0 งาน</div></div>
+    <div class="kpi out"><div class="l">▼ ส่งออกวันนี้</div><div class="v mono" id="kOut">0</div><div class="l" id="kOutT" style="margin-top:3px">0 งาน</div></div>
+  </section>
+
+  <section class="view" id="view">
+    <div class="loading" id="loading">กำลังโหลดโมเดล 3D…</div>
+    <div class="ov ov-top">
+      <div class="search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#e6edf6" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
+        <input id="q" placeholder="ค้นหา SKU, ชื่อสินค้า หรือตำแหน่ง (เช่น A1-03-L2)" autocomplete="off">
+        <div class="results" id="results"></div>
+      </div>
+      <div class="chips" id="modes">
+        <button class="chip on" data-m="normal">หมวดสินค้า</button>
+        <button class="chip" data-m="heat">ความหนาแน่น</button>
+        <button class="chip" data-m="alert">แจ้งเตือน <span class="badge" id="alertBadge">0</span></button>
+      </div>
+    </div>
+    <div class="ov legend" id="legend"></div>
+    <div class="ov ov-right">
+      <button class="ibtn" id="bTop" title="มุมบน"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 12h16M12 4v16"/></svg></button>
+      <button class="ibtn" id="b3d" title="มุมมอง 3D">3D</button>
+      <button class="ibtn" id="bRot" title="หมุนอัตโนมัติ"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12a8 8 0 1 1-2.3-5.6"/><path d="M20 4v5h-5"/></svg></button>
+    </div>
+    <div class="toast" id="toast"></div>
+  </section>
+
+  <section class="sheet">
+    <nav class="tabs" id="tabs">
+      <button class="tab on" data-t="ov">ภาพรวม</button>
+      <button class="tab" data-t="det">รายละเอียด</button>
+      <button class="tab" data-t="al">แจ้งเตือน<i class="dot" id="alDot" style="display:none"></i></button>
+      <button class="tab" data-t="log">กิจกรรม</button>
+    </nav>
+    <div class="pane on" id="p-ov">
+      <div class="card"><h3><span>อัตราใช้พื้นที่ตามโซน</span><span id="binsInfo"></span></h3><div id="zones"></div></div>
+      <div class="card"><h3><span>หุ่นยนต์ขนส่ง (AGV)</span><span>แตะเพื่อติดตาม</span></h3><div id="agvs"></div></div>
+      <div class="card"><h3><span>หมวดสินค้า</span></h3><div class="cats" id="cats"></div></div>
+    </div>
+    <div class="pane" id="p-det"><div class="empty">แตะที่ช่องวางสินค้าในโมเดล 3D<br>หรือค้นหาสินค้าเพื่อดูรายละเอียด</div></div>
+    <div class="pane" id="p-al"></div>
+    <div class="pane" id="p-log"></div>
+  </section>
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+/* =========================================================
+   1) DATA MODEL
+   ========================================================= */
+let seed = 20261116;
+const rnd = () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+  t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+const pick = a => a[Math.floor(rnd() * a.length)];
+const randi = (a, b) => a + Math.floor(rnd() * (b - a + 1));
+
+const CATS = {
+  food: { name: 'อาหารแห้ง',      color: 0xf59e0b },
+  bev:  { name: 'เครื่องดื่ม',     color: 0x38bdf8 },
+  home: { name: 'ของใช้ในบ้าน',   color: 0xa78bfa },
+  elec: { name: 'อิเล็กทรอนิกส์', color: 0x34d399 },
+  care: { name: 'ของใช้ส่วนตัว',  color: 0xf472b6 },
+};
+const PRODUCTS = [
+  ['FD-1001','ข้าวหอมมะลิ 5 กก.','food'],['FD-1002','บะหมี่กึ่งสำเร็จรูป (ลัง 30)','food'],['FD-1003','น้ำมันพืช 1 ลิตร','food'],
+  ['FD-1004','น้ำตาลทราย 1 กก.','food'],['FD-1005','ปลากระป๋อง 155 ก.','food'],['FD-1006','น้ำปลาแท้ 700 มล.','food'],
+  ['BV-2001','น้ำดื่ม 600 มล. (แพ็ค 12)','bev'],['BV-2002','กาแฟกระป๋อง 180 มล.','bev'],['BV-2003','ชาเขียวพร้อมดื่ม 500 มล.','bev'],
+  ['BV-2004','นม UHT 200 มล. (แพ็ค 4)','bev'],['BV-2005','น้ำผลไม้ 1 ลิตร','bev'],
+  ['HM-3001','ผงซักฟอก 2.7 กก.','home'],['HM-3002','น้ำยาล้างจาน 550 มล.','home'],['HM-3003','กระดาษทิชชู (แพ็ค 24)','home'],
+  ['HM-3004','ถุงขยะดำ 30x40','home'],['HM-3005','น้ำยาถูพื้น 1 ลิตร','home'],
+  ['EL-4001','หลอดไฟ LED 9W','elec'],['EL-4002','ปลั๊กพ่วง 4 ช่อง','elec'],['EL-4003','ถ่าน AA (แพ็ค 4)','elec'],
+  ['EL-4004','สาย USB-C 1 ม.','elec'],['EL-4005','พัดลมตั้งโต๊ะ 16"','elec'],
+  ['PC-5001','แชมพู 400 มล.','care'],['PC-5002','สบู่ก้อน (แพ็ค 4)','care'],['PC-5003','ยาสีฟัน 160 ก.','care'],
+  ['PC-5004','โลชั่นทาผิว 400 มล.','care'],['PC-5005','ผ้าอนามัย (แพ็ค 16)','care'],
+].map(([sku, name, cat]) => ({ sku, name, cat }));
+
+// Layout constants (metres)
+const BAY_W = 1.2, RACK_D = 1.0, LVL_H = 0.9, BAYS = 6, LEVELS = 4, ROW_OFF = 1.7;
+const ZONES = [
+  { id: 'A', cx: -4.5, cz: 5,  cats: ['food', 'bev'] },
+  { id: 'B', cx:  4.5, cz: 5,  cats: ['bev', 'care'] },
+  { id: 'C', cx: -4.5, cz: -5, cats: ['home', 'food'] },
+  { id: 'D', cx:  4.5, cz: -5, cats: ['elec', 'home'] },
+];
+const DOCK_IN = { x: -2.2, z: 13.4 }, DOCK_OUT = { x: 2.2, z: 13.4 };
+
+const bins = [];
+const binById = new Map();
+for (const z of ZONES) {
+  for (let r = 0; r < 2; r++) for (let b = 0; b < BAYS; b++) for (let l = 0; l < LEVELS; l++) {
+    const cat = rnd() < 0.8 ? pick(z.cats) : pick(Object.keys(CATS));
+    const prod = pick(PRODUCTS.filter(p => p.cat === cat));
+    const cap = randi(4, 12) * 10;
+    const roll = rnd();
+    const qty = roll < 0.06 ? 0 : roll < 0.16 ? randi(1, Math.floor(cap * 0.12)) : randi(Math.floor(cap * 0.3), cap);
+    const id = `${z.id}${r + 1}-${String(b + 1).padStart(2, '0')}-L${l + 1}`;
+    const bin = {
+      id, zone: z, r, b, l, prod, cap, qty, pending: false, flash: 0,
+      x: z.cx + (r === 0 ? -ROW_OFF : ROW_OFF),
+      z: z.cz - (BAYS * BAY_W) / 2 + (b + 0.5) * BAY_W,
+      baseY: l * LVL_H + 0.125,
+      updated: Date.now() - randi(5, 600) * 60000,
+      hist: [],
+    };
+    bins.push(bin); binById.set(id, bin);
+  }
+}
+const status = b => b.qty === 0 ? 'zero' : b.qty / b.cap < 0.15 ? 'low' : 'ok';
+const isAlert = b => status(b) !== 'ok';
+
+const stats = { inQty: 1260, outQty: 985, inTasks: 38, outTasks: 31 };
+
+/* =========================================================
+   2) THREE.JS SCENE
+   ========================================================= */
+const view = document.getElementById('view');
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+view.prepend(renderer.domElement);
+document.getElementById('loading').remove();
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0b1220);
+scene.fog = new THREE.Fog(0x0b1220, 45, 80);
+
+const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 200);
+const HOME_CAM = { pos: new THREE.Vector3(0, 21, 21.5), tgt: new THREE.Vector3(0, 0, 3.6) };
+camera.position.copy(HOME_CAM.pos);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.copy(HOME_CAM.tgt);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.maxPolarAngle = Math.PI * 0.47;
+controls.minDistance = 4;
+controls.maxDistance = 55;
+controls.autoRotateSpeed = 0.6;
+
+// lights
+scene.add(new THREE.HemisphereLight(0xbcd7ff, 0x1a2233, 0.85));
+const sun = new THREE.DirectionalLight(0xffffff, 1.4);
+sun.position.set(10, 22, 14);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+Object.assign(sun.shadow.camera, { left: -16, right: 16, top: 18, bottom: -16, near: 1, far: 60 });
+sun.shadow.bias = -0.0005;
+scene.add(sun);
+
+// floor
+const FLOOR_W = 22, FLOOR_D = 26, FLOOR_CZ = 2.5;
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(FLOOR_W, FLOOR_D),
+  new THREE.MeshStandardMaterial({ color: 0x1a2436, roughness: 0.9 }));
+floor.rotation.x = -Math.PI / 2; floor.position.z = FLOOR_CZ; floor.receiveShadow = true;
+scene.add(floor);
+const grid = new THREE.GridHelper(26, 26, 0x2a3a55, 0x223047);
+grid.position.set(0, 0.002, FLOOR_CZ); scene.add(grid);
+
+// walls (low, translucent) + outline
+const wallMat = new THREE.MeshStandardMaterial({ color: 0x2b3a55, transparent: true, opacity: 0.35, side: THREE.DoubleSide });
+const WALL_H = 4.6;
+function wall(w, x, z, ry) {
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(w, WALL_H), wallMat);
+  m.position.set(x, WALL_H / 2, z); m.rotation.y = ry; scene.add(m);
+}
+wall(FLOOR_W, 0, FLOOR_CZ - FLOOR_D / 2, 0);
+wall(FLOOR_D, -FLOOR_W / 2, FLOOR_CZ, Math.PI / 2);
+wall(FLOOR_D, FLOOR_W / 2, FLOOR_CZ, Math.PI / 2);
+const outline = new THREE.LineSegments(
+  new THREE.EdgesGeometry(new THREE.BoxGeometry(FLOOR_W, WALL_H, FLOOR_D)),
+  new THREE.LineBasicMaterial({ color: 0x22d3ee, transparent: true, opacity: 0.35 }));
+outline.position.set(0, WALL_H / 2, FLOOR_CZ); scene.add(outline);
+
+// floor markings
+const markMat = new THREE.MeshBasicMaterial({ color: 0xfacc15, transparent: true, opacity: 0.55 });
+function stripe(w, d, x, z, mat = markMat) {
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(w, d), mat);
+  m.rotation.x = -Math.PI / 2; m.position.set(x, 0.01, z); scene.add(m); return m;
+}
+for (const z of ZONES) { // aisle edge lines
+  stripe(0.06, BAYS * BAY_W + 0.6, z.cx - 1.15, z.cz);
+  stripe(0.06, BAYS * BAY_W + 0.6, z.cx + 1.15, z.cz);
+}
+stripe(FLOOR_W - 1, 0.06, 0, 10.2); stripe(FLOOR_W - 1, 0.06, 0, 12.4);
+// dock pads
+const padIn = stripe(3.2, 2.2, DOCK_IN.x, DOCK_IN.z, new THREE.MeshBasicMaterial({ color: 0x34d399, transparent: true, opacity: 0.18 }));
+const padOut = stripe(3.2, 2.2, DOCK_OUT.x, DOCK_OUT.z, new THREE.MeshBasicMaterial({ color: 0xfb923c, transparent: true, opacity: 0.18 }));
+// dock doors
+for (const [d, col] of [[DOCK_IN, 0x34d399], [DOCK_OUT, 0xfb923c]]) {
+  const door = new THREE.Mesh(new THREE.BoxGeometry(2.8, 3, 0.1), new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.4, roughness: 0.5 }));
+  door.position.set(d.x, 1.5, FLOOR_CZ + FLOOR_D / 2 - 0.05); scene.add(door);
+  const lamp = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.12, 0.14), new THREE.MeshBasicMaterial({ color: col }));
+  lamp.position.set(d.x, 3.1, FLOOR_CZ + FLOOR_D / 2 - 0.05); scene.add(lamp);
+}
+
+// text sprites
+function label(text, { color = '#e6edf6', bg = 'rgba(10,16,26,0.85)', size = 1, border = '#22d3ee' } = {}) {
+  const c = document.createElement('canvas'), ctx = c.getContext('2d');
+  const font = '600 44px "IBM Plex Sans Thai", sans-serif';
+  ctx.font = font; const w = Math.ceil(ctx.measureText(text).width) + 48;
+  c.width = w; c.height = 76;
+  ctx.font = font; ctx.fillStyle = bg; ctx.strokeStyle = border; ctx.lineWidth = 4;
+  ctx.beginPath(); ctx.roundRect(2, 2, w - 4, 72, 18); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = color; ctx.textBaseline = 'middle'; ctx.fillText(text, 24, 40);
+  const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthTest: false }));
+  s.scale.set(size * w / 76, size, 1); s.renderOrder = 10; return s;
+}
+const zoneLabels = [];
+function buildLabels() {
+  for (const z of ZONES) {
+    const s = label(`โซน ${z.id}`, { size: 0.85 });
+    s.position.set(z.cx, LEVELS * LVL_H + 1.1, z.cz); scene.add(s); zoneLabels.push(s);
+  }
+  const a = label('▲ รับเข้า', { color: '#34d399', border: '#34d399', size: 0.7 }); a.position.set(DOCK_IN.x, 0.9, DOCK_IN.z); scene.add(a);
+  const b = label('▼ ส่งออก', { color: '#fb923c', border: '#fb923c', size: 0.7 }); b.position.set(DOCK_OUT.x, 0.9, DOCK_OUT.z); scene.add(b);
+}
+document.fonts.ready.then(buildLabels);
+
+// racks (instanced)
+const ROWS = ZONES.flatMap(z => [0, 1].map(r => ({ x: z.cx + (r === 0 ? -ROW_OFF : ROW_OFF), cz: z.cz })));
+const postGeo = new THREE.BoxGeometry(0.08, LEVELS * LVL_H + 0.2, 0.08);
+const posts = new THREE.InstancedMesh(postGeo, new THREE.MeshStandardMaterial({ color: 0x2563eb, metalness: 0.5, roughness: 0.45 }), ROWS.length * (BAYS + 1) * 2);
+const deckGeo = new THREE.BoxGeometry(RACK_D, 0.05, BAY_W * BAYS);
+const decks = new THREE.InstancedMesh(deckGeo, new THREE.MeshStandardMaterial({ color: 0x64748b, metalness: 0.3, roughness: 0.7 }), ROWS.length * LEVELS);
+const beamGeo = new THREE.BoxGeometry(0.06, 0.1, BAY_W * BAYS);
+const beams = new THREE.InstancedMesh(beamGeo, new THREE.MeshStandardMaterial({ color: 0xf97316, metalness: 0.4, roughness: 0.5 }), ROWS.length * LEVELS * 2);
+const M = new THREE.Matrix4();
+let pi = 0, di = 0, bi = 0;
+for (const row of ROWS) {
+  const z0 = row.cz - BAYS * BAY_W / 2;
+  for (let k = 0; k <= BAYS; k++) for (const sx of [-1, 1]) {
+    M.makeTranslation(row.x + sx * RACK_D / 2, (LEVELS * LVL_H + 0.2) / 2, z0 + k * BAY_W); posts.setMatrixAt(pi++, M);
+  }
+  for (let l = 0; l < LEVELS; l++) {
+    M.makeTranslation(row.x, l * LVL_H + 0.1, row.cz); decks.setMatrixAt(di++, M);
+    for (const sx of [-1, 1]) { M.makeTranslation(row.x + sx * RACK_D / 2, l * LVL_H + 0.1, row.cz); beams.setMatrixAt(bi++, M); }
+  }
+}
+for (const im of [posts, decks, beams]) { im.castShadow = true; im.receiveShadow = true; scene.add(im); }
+
+// bins: visible cargo box + invisible hit box
+const boxGeo = new THREE.BoxGeometry(1, 1, 1);
+const hitMat = new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false });
+const hitGeo = new THREE.BoxGeometry(RACK_D, LVL_H - 0.08, BAY_W);
+const hitBoxes = [];
+for (const b of bins) {
+  const mat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.75, transparent: true });
+  b.mesh = new THREE.Mesh(boxGeo, mat);
+  b.mesh.position.set(b.x, 0, b.z); b.mesh.castShadow = true; b.mesh.receiveShadow = true;
+  scene.add(b.mesh);
+  const hit = new THREE.Mesh(hitGeo, hitMat);
+  hit.position.set(b.x, b.baseY + (LVL_H - 0.08) / 2, b.z); hit.userData.bin = b;
+  scene.add(hit); hitBoxes.push(hit);
+}
+
+// selection marker
+const selBox = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(RACK_D + 0.08, LVL_H - 0.02, BAY_W + 0.04)),
+  new THREE.LineBasicMaterial({ color: 0x22d3ee, depthTest: false, transparent: true }));
+selBox.renderOrder = 9; selBox.visible = false; scene.add(selBox);
+const beacon = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 6, 8, 1, true),
+  new THREE.MeshBasicMaterial({ color: 0x22d3ee, transparent: true, opacity: 0.5, depthWrite: false }));
+beacon.visible = false; scene.add(beacon);
+
+/* =========================================================
+   3) AGVs
+   ========================================================= */
+const AGV_DEF = [
+  { id: 'AGV-01', color: 0x22d3ee, home: { x: -8.6, z: 13.8 } },
+  { id: 'AGV-02', color: 0xfacc15, home: { x: -6.8, z: 13.8 } },
+  { id: 'AGV-03', color: 0xa78bfa, home: { x:  6.8, z: 13.8 } },
+  { id: 'AGV-04', color: 0xf472b6, home: { x:  8.6, z: 13.8 } },
+];
+const crateMat = new THREE.MeshStandardMaterial({ color: 0xc8925a, roughness: 0.85 });
+const agvs = AGV_DEF.map((d, i) => {
+  const g = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.28, 0.95), new THREE.MeshStandardMaterial({ color: 0x1f2937, metalness: 0.5, roughness: 0.4 }));
+  body.position.y = 0.17; body.castShadow = true; g.add(body);
+  const stripeM = new THREE.Mesh(new THREE.BoxGeometry(0.77, 0.06, 0.97), new THREE.MeshBasicMaterial({ color: d.color }));
+  stripeM.position.y = 0.26; g.add(stripeM);
+  const light = new THREE.Mesh(new THREE.SphereGeometry(0.07, 12, 8), new THREE.MeshBasicMaterial({ color: d.color }));
+  light.position.set(0, 0.38, -0.3); g.add(light);
+  const mast = new THREE.Mesh(new THREE.BoxGeometry(0.6, 1, 0.06), new THREE.MeshStandardMaterial({ color: 0x475569, metalness: 0.6 }));
+  mast.position.set(0, 0.5, 0.48); mast.scale.y = 0.5; g.add(mast);
+  const crate = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.45, 0.7), crateMat);
+  crate.castShadow = true; crate.visible = false; g.add(crate);
+  const ring = new THREE.Mesh(new THREE.RingGeometry(0.62, 0.72, 32), new THREE.MeshBasicMaterial({ color: d.color, transparent: true, opacity: 0.0, side: THREE.DoubleSide }));
+  ring.rotation.x = -Math.PI / 2; ring.position.y = 0.02; g.add(ring);
+  g.position.set(d.home.x, 0, d.home.z); scene.add(g);
+  return { ...d, idx: i, g, crate, mast, light, ring, lane: 10.6 + i * 0.5, steps: [], cur: null, task: null,
+    battery: randi(62, 98), heading: Math.PI, done: 0, state: 'ว่าง' };
+});
+const resetCrate = a => { a.crate.position.set(0, 0.55, 0); a.mast.scale.y = 0.5; a.mast.position.y = 0.25 + 0.05; };
+agvs.forEach(resetCrate);
+
+function route(a, to) {
+  const p = a.g.position, pts = [];
+  if (Math.abs(p.x - to.x) > 0.05) { pts.push({ x: p.x, z: a.lane }, { x: to.x, z: a.lane }); }
+  pts.push(to); return pts;
+}
+const moveTo = (to, state) => ({ kind: 'move', to, state });
+const wait = (dur, state, fn = {}) => ({ kind: 'wait', dur, state, ...fn });
+
+function planTask(a, t) {
+  const b = t.bin, aisle = { x: b.zone.cx, z: b.z };
+  const face = b.x < b.zone.cx ? -Math.PI / 2 : Math.PI / 2; // toward rack row
+  const binY = b.baseY + 0.25;
+  const lift = (up) => ({
+    onStart: () => { a.heading = face; if (up) a.crate.visible = true; },
+    onUpdate: k => {
+      const e = up ? k : 1 - k;
+      const y = 0.55 + (binY - 0.55) * Math.min(1, e * 1.6);
+      const zf = Math.max(0, e - 0.6) / 0.4 * 1.45;
+      a.crate.position.set(0, y, zf); a.mast.scale.y = Math.max(0.5, y + 0.4); a.mast.position.y = a.mast.scale.y / 2;
+    },
+  });
+  a.task = t; t.bin.pending = true;
+  if (t.type === 'in') {
+    a.steps = [
+      moveTo(DOCK_IN, 'ไปจุดรับเข้า'),
+      wait(0.9, 'กำลังโหลดสินค้า', { onEnd: () => { a.crate.visible = true; } }),
+      moveTo(aisle, `ขนไป ${b.id}`),
+      wait(1.6, `จัดเก็บ ${b.id}`, { ...lift(true), onEnd: () => { a.crate.visible = false; resetCrate(a); completeTask(a, t); } }),
+      moveTo(a.home, 'กลับจุดจอด'),
+    ];
+  } else {
+    a.steps = [
+      moveTo(aisle, `ไปหยิบ ${b.id}`),
+      wait(1.6, `หยิบสินค้า ${b.id}`, { onStart: () => { a.heading = face; a.crate.visible = true; }, onUpdate: lift(false).onUpdate,
+        onEnd: () => { resetCrate(a); completeTask(a, t, true); } }),
+      moveTo(DOCK_OUT, 'ขนไปจุดส่งออก'),
+      wait(0.9, 'กำลังส่งมอบ', { onEnd: () => { a.crate.visible = false; finishOut(a, t); } }),
+      moveTo(a.home, 'กลับจุดจอด'),
+    ];
+  }
+  // make the "pick" lift start from the bin
+  if (t.type === 'out') a.steps[1].onStart = () => { a.heading = face; a.crate.visible = true; };
+  nextStep(a);
+}
+function nextStep(a) {
+  const s = a.steps.shift();
+  if (!s) { a.cur = null; a.task = null; a.state = 'ว่าง'; renderAgvs(); return; }
+  if (s.kind === 'move') { s.pts = route(a, s.to); }
+  else { s.t = 0; s.onStart && s.onStart(); }
+  a.cur = s; a.state = s.state; renderAgvs();
+}
+const SPEED = 3.2;
+function updateAgv(a, dt) {
+  const s = a.cur;
+  if (s) {
+    if (s.kind === 'move') {
+      let left = SPEED * dt;
+      while (left > 0 && s.pts.length) {
+        const p = a.g.position, tgt = s.pts[0];
+        const dx = tgt.x - p.x, dz = tgt.z - p.z, d = Math.hypot(dx, dz);
+        if (d < 1e-4) { s.pts.shift(); continue; }
+        a.heading = Math.atan2(dx, dz);
+        const st = Math.min(d, left); p.x += dx / d * st; p.z += dz / d * st; left -= st;
+        if (st >= d) s.pts.shift();
+      }
+      a.battery = Math.max(15, a.battery - dt * 0.05);
+      if (!s.pts.length) nextStep(a);
+    } else {
+      s.t += dt; const k = Math.min(1, s.t / s.dur);
+      s.onUpdate && s.onUpdate(k);
+      if (k >= 1) { s.onEnd && s.onEnd(); nextStep(a); }
+    }
+  } else if (a.battery < 99) a.battery = Math.min(100, a.battery + dt * 0.4); // charging at home
+  // smooth rotation
+  let d = a.heading - a.g.rotation.y; d = Math.atan2(Math.sin(d), Math.cos(d));
+  a.g.rotation.y += d * Math.min(1, dt * 10);
+}
+
+/* task queue + simulation */
+const queue = [];
+function dispatch(bin, type, qty, manual = false) {
+  if (bin.pending) { toast(`${bin.id} มีงานค้างอยู่แล้ว`); return false; }
+  const t = { bin, type, qty, manual }; bin.pending = true; queue.push(t);
+  log(type === 'in' ? '📥' : '📤', `สร้างงาน${type === 'in' ? 'รับเข้า' : 'เบิกออก'} ${qty} ชิ้น → <b>${bin.id}</b>${manual ? ' (สั่งเอง)' : ''}`);
+  if (sel === bin) renderDetail();
+  return true;
+}
+function assign() {
+  while (queue.length) {
+    const a = agvs.filter(a => !a.cur && !a.task).sort((p, q) => q.battery - p.battery)[0];
+    if (!a) return;
+    planTask(a, queue.shift());
+  }
+}
+function completeTask(a, t, isOut = false) {
+  const b = t.bin, before = b.qty;
+  if (isOut) { t.actual = Math.min(b.qty, t.qty); b.qty -= t.actual; }
+  else { t.actual = Math.min(b.cap - b.qty, t.qty); b.qty += t.actual; stats.inQty += t.actual; stats.inTasks++; }
+  b.updated = Date.now(); b.flash = 1; b.pending = false; a.done++;
+  b.hist.unshift({ t: Date.now(), d: isOut ? -t.actual : t.actual, by: a.id });
+  b.hist.length = Math.min(b.hist.length, 6);
+  if (!isOut) log('▲', `${a.id} จัดเก็บ <b>${b.prod.name}</b> +${t.actual} ที่ ${b.id}`, 'var(--green)');
+  else log('▼', `${a.id} หยิบ <b>${b.prod.name}</b> −${t.actual} จาก ${b.id}`, 'var(--orange)');
+  if (status(b) !== 'ok' && before / b.cap >= 0.15) log('⚠', `สต็อกต่ำ: ${b.prod.name} ที่ ${b.id} เหลือ ${b.qty}/${b.cap}`, 'var(--amber)');
+  refreshBin(b); refreshAll();
+}
+function finishOut(a, t) {
+  stats.outQty += t.actual; stats.outTasks++;
+  log('✓', `${a.id} ส่งมอบที่จุดส่งออก ${t.actual} ชิ้น`, 'var(--mut)'); refreshKpi();
+}
+function autoGen() {
+  if (queue.length >= 2) return;
+  const free = bins.filter(b => !b.pending);
+  const lowFirst = free.filter(isAlert);
+  if (rnd() < (lowFirst.length > 12 ? 0.62 : 0.5)) {
+    const pool = lowFirst.length && rnd() < 0.7 ? lowFirst : free.filter(b => b.qty / b.cap < 0.7);
+    if (!pool.length) return;
+    const b = pick(pool); dispatch(b, 'in', Math.max(5, Math.min(b.cap - b.qty, randi(10, 50))));
+  } else {
+    const pool = free.filter(b => b.qty > 5);
+    if (!pool.length) return;
+    const b = pick(pool); dispatch(b, 'out', Math.min(b.qty, randi(5, 30)));
+  }
+}
+
+/* =========================================================
+   4) VISUAL MODES
+   ========================================================= */
+let mode = 'normal';
+const tmpC = new THREE.Color();
+function heatColor(f, out) { return out.setHSL(0.33 * (1 - Math.min(1, f)), 0.8, 0.5); }
+function refreshBin(b) {
+  const f = b.qty / b.cap, m = b.mesh.material;
+  const h = 0.7 * Math.max(f, 0.05);
+  b.mesh.scale.set(0.82, h, 1.02);
+  b.mesh.position.y = b.baseY + 0.025 + h / 2;
+  if (mode === 'normal') {
+    m.color.setHex(CATS[b.prod.cat].color); m.opacity = 1; b.mesh.visible = b.qty > 0;
+  } else if (mode === 'heat') {
+    heatColor(f, m.color); m.opacity = b.qty ? 0.95 : 0.25; b.mesh.visible = true;
+  } else {
+    const al = isAlert(b);
+    m.color.setHex(al ? (b.qty ? 0xfbbf24 : 0xef4444) : 0x64748b);
+    m.opacity = al ? 1 : 0.15; b.mesh.visible = true;
+  }
+  m.depthWrite = m.opacity > 0.5;
+}
+function setMode(m) {
+  mode = m;
+  document.querySelectorAll('#modes .chip').forEach(c => c.classList.toggle('on', c.dataset.m === m));
+  bins.forEach(refreshBin); renderLegend();
+}
+function renderLegend() {
+  const el = document.getElementById('legend');
+  if (mode === 'normal') el.innerHTML = `<div class="row">${Object.values(CATS).map(c =>
+    `<span class="row"><i class="sw" style="background:#${c.color.toString(16).padStart(6, '0')}"></i>${c.name}</span>`).join('')}</div>`;
+  else if (mode === 'heat') el.innerHTML = `<div>อัตราเต็มของช่อง</div><div class="row">0% <span class="grad"></span> 100%</div>`;
+  else el.innerHTML = `<div class="row"><i class="sw" style="background:#ef4444"></i>ช่องว่าง <i class="sw" style="background:#fbbf24;margin-left:6px"></i>สต็อกต่ำ (&lt;15%)</div>`;
+}
+
+/* =========================================================
+   5) INTERACTION
+   ========================================================= */
+let sel = null, follow = null, fly = null;
+const ray = new THREE.Raycaster(), ptr = new THREE.Vector2();
+let down = null;
+renderer.domElement.addEventListener('pointerdown', e => { down = { x: e.clientX, y: e.clientY }; });
+renderer.domElement.addEventListener('pointerup', e => {
+  if (!down || Math.hypot(e.clientX - down.x, e.clientY - down.y) > 6) return;
+  const r = renderer.domElement.getBoundingClientRect();
+  ptr.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+  ray.setFromCamera(ptr, camera);
+  const ag = ray.intersectObjects(agvs.map(a => a.g), true)[0];
+  if (ag) { const a = agvs.find(a => ag.object.parent === a.g); if (a) { setFollow(a); return; } }
+  const hit = ray.intersectObjects(hitBoxes, false)[0];
+  if (hit) select(hit.object.userData.bin, false);
+});
+controls.addEventListener('start', () => { fly = null; if (follow) setFollow(null); });
+
+function flyTo(tgt, pos, dur = 0.9) {
+  fly = { t: 0, dur, t0: controls.target.clone(), p0: camera.position.clone(), t1: tgt.clone(), p1: pos.clone() };
+}
+function select(b, doFly = true) {
+  sel = b;
+  selBox.visible = beacon.visible = true;
+  selBox.position.set(b.x, b.baseY + (LVL_H - 0.02) / 2, b.z);
+  beacon.position.set(b.x, b.baseY + 3.5, b.z);
+  if (doFly) {
+    const side = b.x < b.zone.cx ? 1 : -1;
+    const tgt = new THREE.Vector3(b.x, b.baseY + 0.4, b.z);
+    flyTo(tgt, new THREE.Vector3(b.x + side * 5.5, b.baseY + 4.5, b.z + 6));
+  }
+  setTab('det'); renderDetail();
+}
+function setFollow(a) {
+  follow = a;
+  agvs.forEach(x => x.ring.material.opacity = x === a ? 0.9 : 0);
+  if (a) { const p = a.g.position; flyTo(new THREE.Vector3(p.x, 0.5, p.z), new THREE.Vector3(p.x + 4, 7, p.z + 7), 0.7); toast(`กำลังติดตาม ${a.id}`); }
+  renderAgvs();
+}
+
+document.getElementById('modes').addEventListener('click', e => { const c = e.target.closest('.chip'); if (c) setMode(c.dataset.m); });
+document.getElementById('bTop').onclick = () => { setFollow(null); flyTo(new THREE.Vector3(0, 0, FLOOR_CZ), new THREE.Vector3(0, 38, FLOOR_CZ + 0.01)); };
+document.getElementById('b3d').onclick = () => { setFollow(null); flyTo(HOME_CAM.tgt, HOME_CAM.pos); };
+document.getElementById('bRot').onclick = e => { controls.autoRotate = !controls.autoRotate; e.currentTarget.classList.toggle('on', controls.autoRotate); };
+
+// search
+const qEl = document.getElementById('q'), resEl = document.getElementById('results');
+qEl.addEventListener('input', () => {
+  const q = qEl.value.trim().toLowerCase();
+  if (!q) { resEl.classList.remove('show'); return; }
+  const hits = bins.filter(b => b.id.toLowerCase().includes(q) || b.prod.sku.toLowerCase().includes(q) || b.prod.name.toLowerCase().includes(q)).slice(0, 12);
+  resEl.innerHTML = hits.length ? hits.map(b => `<div class="res" data-id="${b.id}"><span>${b.prod.name} <span style="color:var(--mut)">· ${b.qty}/${b.cap}</span></span><span class="loc">${b.id}</span></div>`).join('')
+    : `<div class="res" style="color:var(--mut)">ไม่พบสินค้า</div>`;
+  resEl.classList.add('show');
+});
+resEl.addEventListener('click', e => { const r = e.target.closest('[data-id]'); if (!r) return; select(binById.get(r.dataset.id)); resEl.classList.remove('show'); qEl.blur(); });
+document.addEventListener('pointerdown', e => { if (!e.target.closest('.search')) resEl.classList.remove('show'); });
+
+// tabs
+function setTab(t) {
+  document.querySelectorAll('.tab').forEach(x => x.classList.toggle('on', x.dataset.t === t));
+  document.querySelectorAll('.pane').forEach(x => x.classList.toggle('on', x.id === 'p-' + t));
+}
+document.getElementById('tabs').addEventListener('click', e => { const t = e.target.closest('.tab'); if (t) setTab(t.dataset.t); });
+
+/* =========================================================
+   6) UI RENDERING
+   ========================================================= */
+const $ = id => document.getElementById(id);
+const fmt = n => n.toLocaleString('th-TH');
+const tm = t => new Date(t).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+const ago = t => { const m = Math.round((Date.now() - t) / 60000); return m < 1 ? 'เมื่อสักครู่' : m < 60 ? `${m} นาทีที่แล้ว` : `${Math.floor(m / 60)} ชม. ที่แล้ว`; };
+const hex = c => '#' + c.toString(16).padStart(6, '0');
+
+function refreshKpi() {
+  const q = bins.reduce((s, b) => s + b.qty, 0), c = bins.reduce((s, b) => s + b.cap, 0);
+  const occ = Math.round(q / c * 100);
+  $('kOcc').innerHTML = `${occ}<small>%</small>`; $('kOccBar').style.width = occ + '%';
+  $('kStock').textContent = fmt(q);
+  $('kSku').textContent = `${new Set(bins.filter(b => b.qty).map(b => b.prod.sku)).size} SKU · ${bins.length} ช่อง`;
+  $('kIn').textContent = fmt(stats.inQty); $('kInT').textContent = `${stats.inTasks} งาน`;
+  $('kOut').textContent = fmt(stats.outQty); $('kOutT').textContent = `${stats.outTasks} งาน`;
+}
+function renderZones() {
+  $('zones').innerHTML = ZONES.map(z => {
+    const zb = bins.filter(b => b.zone === z);
+    const p = Math.round(zb.reduce((s, b) => s + b.qty, 0) / zb.reduce((s, b) => s + b.cap, 0) * 100);
+    const col = p > 85 ? 'var(--red)' : p > 65 ? 'var(--amber)' : 'var(--green)';
+    const al = zb.filter(isAlert).length;
+    return `<div class="zrow" data-z="${z.id}"><span class="z">${z.id}</span><div><div class="track"><b style="width:${p}%;background:${col}"></b></div>
+      <div style="font-size:9.5px;color:var(--mut);margin-top:2px">${z.cats.map(c => CATS[c].name).join(' · ')}${al ? ` · <span style="color:var(--amber)">⚠ ${al}</span>` : ''}</div></div><span class="p">${p}%</span></div>`;
+  }).join('');
+  $('binsInfo').textContent = `${bins.filter(b => b.qty).length}/${bins.length} ช่องมีสินค้า`;
+}
+$('zones').addEventListener('click', e => {
+  const r = e.target.closest('[data-z]'); if (!r) return;
+  const z = ZONES.find(z => z.id === r.dataset.z); setFollow(null);
+  flyTo(new THREE.Vector3(z.cx, 1, z.cz), new THREE.Vector3(z.cx + (z.cx < 0 ? -6 : 6), 11, z.cz + 10));
+});
+function renderAgvs() {
+  $('agvs').innerHTML = agvs.map(a => {
+    const bc = a.battery < 30 ? 'var(--red)' : a.battery < 60 ? 'var(--amber)' : 'var(--green)';
+    return `<div class="agv ${follow === a ? 'follow' : ''}" data-a="${a.idx}"><span class="ic" style="background:${hex(a.color)}">${a.id.slice(-2)}</span>
+      <div><div style="font-weight:600">${a.id} <span class="st">· สำเร็จ ${a.done} งาน</span></div><div class="st">${a.cur ? '● ' : '○ '}${a.state}</div></div>
+      <span class="bat" style="color:${bc}">${Math.round(a.battery)}%${a.cur ? '' : ' ⚡'}</span></div>`;
+  }).join('');
+}
+$('agvs').addEventListener('click', e => { const r = e.target.closest('[data-a]'); if (r) { const a = agvs[+r.dataset.a]; setFollow(follow === a ? null : a); } });
+$('cats').innerHTML = Object.entries(CATS).map(([k, c]) => {
+  const n = bins.filter(b => b.prod.cat === k).length;
+  return `<span><i style="width:9px;height:9px;border-radius:2px;background:${hex(c.color)};display:inline-block"></i>${c.name} (${n})</span>`;
+}).join('');
+
+function renderDetail() {
+  const b = sel; if (!b) return;
+  const st = status(b), f = b.qty / b.cap;
+  const pill = b.pending ? `<span class="pill busy">มีงานรอ AGV</span>` :
+    st === 'ok' ? `<span class="pill ok">ปกติ</span>` : st === 'low' ? `<span class="pill low">สต็อกต่ำ</span>` : `<span class="pill zero">ช่องว่าง</span>`;
+  const col = st === 'ok' ? 'var(--cyan)' : st === 'low' ? 'var(--amber)' : 'var(--red)';
+  $('p-det').innerHTML = `<div class="card">
+    <div class="det-top"><div><div class="det-loc">${b.id}</div><div class="det-name">${b.prod.name}</div>
+      <div class="det-sku">${b.prod.sku} · ${CATS[b.prod.cat].name}</div></div>${pill}</div>
+    <div class="qty"><b style="color:${col}">${b.qty}</b><span>/ ${b.cap} ชิ้น (${Math.round(f * 100)}%)</span></div>
+    <div class="track"><b style="width:${f * 100}%;background:${col}"></b></div>
+    <div class="grid2">
+      <div class="kv"><div class="k">โซน / แถว</div><div class="vv">${b.zone.id} / แถว ${b.r + 1}</div></div>
+      <div class="kv"><div class="k">ช่อง / ชั้น</div><div class="vv">ช่อง ${b.b + 1} / ชั้น ${b.l + 1}</div></div>
+      <div class="kv"><div class="k">อัปเดตล่าสุด</div><div class="vv">${ago(b.updated)}</div></div>
+      <div class="kv"><div class="k">พิกัด (x, y, z)</div><div class="vv mono" style="font-size:10.5px">${b.x.toFixed(1)}, ${b.baseY.toFixed(1)}, ${b.z.toFixed(1)}</div></div>
+    </div>
+    <div class="acts">
+      <button class="btn in" id="aIn" ${b.pending || b.qty >= b.cap ? 'disabled' : ''}>▲ สั่งรับเข้า</button>
+      <button class="btn out" id="aOut" ${b.pending || b.qty === 0 ? 'disabled' : ''}>▼ สั่งเบิกออก</button>
+    </div>
+    ${b.hist.length ? `<div class="hist"><div style="color:var(--txt);border:0;font-weight:600">ประวัติการเคลื่อนไหว</div>${b.hist.map(h =>
+      `<div><span>${tm(h.t)} · ${h.by}</span><span style="color:${h.d > 0 ? 'var(--green)' : 'var(--orange)'}">${h.d > 0 ? '+' : ''}${h.d}</span></div>`).join('')}</div>` : ''}
+  </div>`;
+  $('aIn').onclick = () => { dispatch(b, 'in', Math.max(1, Math.min(b.cap - b.qty, 30)), true) && (assign(), toast(`ส่งงานรับเข้า ${b.id} ให้ AGV แล้ว`)); renderDetail(); };
+  $('aOut').onclick = () => { dispatch(b, 'out', Math.min(b.qty, 20), true) && (assign(), toast(`ส่งงานเบิก ${b.id} ให้ AGV แล้ว`)); renderDetail(); };
+}
+function renderAlerts() {
+  const al = bins.filter(isAlert).sort((a, b) => a.qty / a.cap - b.qty / b.cap);
+  $('alertBadge').textContent = al.length; $('alDot').style.display = al.length ? '' : 'none';
+  $('p-al').innerHTML = al.length ? al.map(b => {
+    const st = status(b);
+    return `<div class="alert" data-id="${b.id}"><span class="loc">${b.id}</span><span class="nm">${b.prod.name}</span>
+      <span class="pill ${st}">${st === 'zero' ? 'ว่าง' : `${b.qty}/${b.cap}`}</span>${b.pending ? '<span class="pill busy">⟳</span>' : ''}</div>`;
+  }).join('') : `<div class="empty">✓ ไม่มีรายการแจ้งเตือน</div>`;
+}
+$('p-al').addEventListener('click', e => { const r = e.target.closest('[data-id]'); if (r) select(binById.get(r.dataset.id)); });
+
+const logs = [];
+function log(icon, html, color = 'var(--cyan)') {
+  logs.unshift({ t: Date.now(), icon, html, color }); logs.length = Math.min(logs.length, 60);
+  $('p-log').innerHTML = logs.map((l, i) => `<div class="log ${i === 0 ? 'newi' : ''}"><span class="t">${tm(l.t)}</span><span class="i" style="color:${l.color}">${l.icon}</span><span>${l.html}</span></div>`).join('');
+}
+function refreshAll() { refreshKpi(); renderZones(); renderAlerts(); if (sel) renderDetail(); }
+
+let toastT;
+function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 1800); }
+
+// clock + environment sensors
+let temp = 26.4, hum = 58;
+function tick() {
+  const d = new Date();
+  $('clk').textContent = d.toLocaleTimeString('th-TH', { hour12: false });
+  $('dte').textContent = d.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' });
+  temp = Math.min(30, Math.max(23, temp + (rnd() - 0.5) * 0.1)); hum = Math.min(70, Math.max(45, hum + (rnd() - 0.5) * 0.4));
+  $('env').textContent = `🌡 ${temp.toFixed(1)}°C · 💧 ${Math.round(hum)}%RH`;
+}
+
+/* =========================================================
+   7) LOOP
+   ========================================================= */
+function resize() {
+  const w = view.clientWidth, h = view.clientHeight;
+  renderer.setSize(w, h, false); camera.aspect = w / h;
+  // keep the whole warehouse in frame on narrow viewports
+  camera.fov = w / h < 0.9 ? 58 : w / h < 1.25 ? 50 : 44; camera.updateProjectionMatrix();
+}
+new ResizeObserver(resize).observe(view); resize();
+
+const clock = new THREE.Clock();
+let genT = 0, uiT = 0;
+const ease = t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+function loop() {
+  const dt = Math.min(clock.getDelta(), 0.05), now = clock.elapsedTime;
+  genT += dt; uiT += dt;
+  if (genT > 1.6) { genT = 0; autoGen(); }
+  assign();
+  agvs.forEach(a => { updateAgv(a, dt); a.light.material.color.setHex(a.cur ? (Math.sin(now * 10) > 0 ? a.color : 0x111827) : a.color); });
+  if (uiT > 1) { uiT = 0; renderAgvs(); }
+
+  // per-bin pulses
+  const pulse = (Math.sin(now * 4) + 1) / 2;
+  for (const b of bins) {
+    const m = b.mesh.material;
+    if (b.flash > 0) b.flash = Math.max(0, b.flash - dt * 1.2);
+    let e = b.flash * 0.9;
+    if (mode === 'alert' && isAlert(b)) e = Math.max(e, 0.15 + pulse * 0.45);
+    if (b.pending) e = Math.max(e, 0.12 + pulse * 0.25);
+    m.emissive.copy(b.pending && b.flash === 0 && mode !== 'alert' ? tmpC.setHex(0x22d3ee) : m.color).multiplyScalar(e);
+  }
+  if (sel) { selBox.material.opacity = 0.55 + pulse * 0.45; beacon.material.opacity = 0.2 + pulse * 0.4; }
+  padIn.material.opacity = 0.12 + (agvs.some(a => a.cur && a.cur.state === 'กำลังโหลดสินค้า') ? pulse * 0.3 : 0);
+  padOut.material.opacity = 0.12 + (agvs.some(a => a.cur && a.cur.state === 'กำลังส่งมอบ') ? pulse * 0.3 : 0);
+
+  if (fly) {
+    fly.t += dt; const k = ease(Math.min(1, fly.t / fly.dur));
+    controls.target.lerpVectors(fly.t0, fly.t1, k); camera.position.lerpVectors(fly.p0, fly.p1, k);
+    if (k >= 1) fly = null;
+  } else if (follow) {
+    const p = follow.g.position, d = new THREE.Vector3(p.x - controls.target.x, 0.5 - controls.target.y, p.z - controls.target.z).multiplyScalar(Math.min(1, dt * 4));
+    controls.target.add(d); camera.position.add(d);
+  }
+  controls.update();
+  renderer.render(scene, camera);
+  requestAnimationFrame(loop);
+}
+
+/* boot */
+bins.forEach(refreshBin); renderLegend(); refreshAll(); renderAgvs(); tick(); setInterval(tick, 1000);
+log('●', 'เชื่อมต่อระบบ WMS และเซนเซอร์ IoT สำเร็จ', 'var(--green)');
+log('●', `โหลดผังคลัง ${ZONES.length} โซน · ${bins.length} ช่องวาง · ${agvs.length} AGV`, 'var(--cyan)');
+loop();
+</script>
+</body>
+</html>
