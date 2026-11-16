@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>ห้องเซฟทรัพย์จำนำ · Digital Twin 3D</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#05080e;--frame:#0a101a;--panel:#0e1624;--panel2:#141f31;--line:#1f2c42;
+  --txt:#e6edf6;--mut:#8796ab;--dim:#5b6a80;
+  --cyan:#22d3ee;--green:#34d399;--amber:#fbbf24;--red:#f87171;--violet:#a78bfa;--white:#f1f5f9;--yellow:#facc15;
+}
+html,body{height:100%;background:var(--bg);color:var(--txt);font-family:'IBM Plex Sans Thai',sans-serif;overflow:hidden;-webkit-tap-highlight-color:transparent}
+body{display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at 50% 0%,#1a1630 0%,var(--bg) 60%)}
+.mono{font-family:'JetBrains Mono',monospace}
+button{font:inherit}
+
+/* 9:16 frame */
+.frame{height:100vh;height:100dvh;width:min(100vw,calc(100dvh * 9 / 16));background:var(--frame);display:flex;flex-direction:column;
+  position:relative;overflow:hidden;box-shadow:0 0 0 1px var(--line),0 30px 80px rgba(0,0,0,.6)}
+
+.hdr{display:flex;align-items:center;gap:10px;padding:10px 14px 8px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,#151a2e,transparent)}
+.logo{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;flex-shrink:0;background:linear-gradient(135deg,#a16207,#facc15);box-shadow:0 0 16px rgba(250,204,21,.3)}
+.logo svg{width:20px;height:20px}
+.ttl{flex:1;min-width:0}
+.ttl h1{font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ttl .sub{font-size:10.5px;color:var(--mut);display:flex;gap:6px;align-items:center;white-space:nowrap;overflow:hidden}
+.src{display:inline-flex;align-items:center;gap:4px;font-weight:600}
+.src i{width:6px;height:6px;border-radius:50%;background:currentColor;box-shadow:0 0 8px currentColor}
+.clock{text-align:right;font-size:15px;font-weight:700;color:var(--yellow);line-height:1.1}
+.clock small{display:block;font-size:9.5px;color:var(--mut);font-family:'IBM Plex Sans Thai';font-weight:500}
+
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:8px 10px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:7px 8px;min-width:0;cursor:default}
+.kpi .l{font-size:9.5px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kpi .v{font-size:16px;font-weight:700;margin-top:1px;white-space:nowrap}
+.kpi .s{font-size:9.5px;color:var(--dim);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+.view{flex:1;min-height:0;position:relative;margin:0 10px;border-radius:14px;overflow:hidden;border:1px solid var(--line);background:#0b1020}
+.view canvas{display:block;width:100%;height:100%;touch-action:none}
+.ov{position:absolute;pointer-events:none;z-index:2}
+.ov > *{pointer-events:auto}
+.ov-top{top:8px;left:8px;right:8px;display:flex;flex-direction:column;gap:6px}
+.search{position:relative;z-index:5}
+.search input{width:100%;height:36px;border-radius:9px;border:1px solid var(--line);background:rgba(10,16,26,.88);backdrop-filter:blur(8px);
+  color:var(--txt);padding:0 10px 0 32px;font:inherit;font-size:13px;outline:none}
+.search input:focus{border-color:var(--yellow)}
+.search svg{position:absolute;left:10px;top:10px;width:16px;height:16px;opacity:.6;z-index:1;pointer-events:none}
+.results{position:absolute;top:40px;left:0;right:0;background:rgba(12,19,31,.97);border:1px solid var(--line);border-radius:10px;display:none;max-height:230px;overflow-y:auto}
+.results.show{display:block}
+.res{padding:7px 10px;font-size:12px;display:flex;justify-content:space-between;gap:8px;cursor:pointer;border-bottom:1px solid var(--line);align-items:center}
+.res:last-child{border-bottom:0}
+.res:hover,.res:active{background:var(--panel2)}
+.res .c{font-family:'JetBrains Mono';font-size:11.5px;color:var(--yellow)}
+.res .loc{color:var(--mut);font-size:10.5px;white-space:nowrap}
+.chips{display:flex;gap:5px;flex-wrap:wrap}
+.chip{height:28px;padding:0 10px;border-radius:14px;border:1px solid var(--line);background:rgba(10,16,26,.85);backdrop-filter:blur(8px);color:var(--mut);
+  font-size:11.5px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:5px}
+.chip.on{color:#1a1300;background:var(--yellow);border-color:var(--yellow)}
+.chip .badge{background:var(--red);color:#fff;border-radius:8px;font-size:9.5px;padding:0 5px;line-height:15px}
+.ov-right{right:8px;bottom:8px;display:flex;flex-direction:column;gap:6px}
+.ibtn{width:34px;height:34px;border-radius:9px;border:1px solid var(--line);background:rgba(10,16,26,.85);backdrop-filter:blur(8px);color:var(--txt);cursor:pointer;display:grid;place-items:center;font-size:11px;font-weight:700}
+.ibtn svg{width:17px;height:17px}
+.legend{left:8px;bottom:8px;background:rgba(10,16,26,.85);backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:8px;padding:4px 7px;
+  font-size:9.5px;color:var(--mut);display:flex;flex-wrap:wrap;gap:3px 8px;max-width:calc(100% - 60px)}
+.legend span{display:inline-flex;align-items:center;gap:3px}
+.sw{width:9px;height:9px;border-radius:2px;display:inline-block;flex-shrink:0}
+.legend .grad{width:70px;height:7px;border-radius:4px;background:linear-gradient(90deg,#22c55e,#eab308,#ef4444)}
+.toast{position:absolute;left:50%;top:86px;transform:translate(-50%,-10px);background:rgba(12,19,31,.95);border:1px solid var(--yellow);color:var(--txt);
+  font-size:11.5px;padding:6px 12px;border-radius:16px;opacity:0;transition:all .3s;pointer-events:none;z-index:6;white-space:nowrap;max-width:92%;overflow:hidden;text-overflow:ellipsis}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+.sheet{height:38%;min-height:240px;display:flex;flex-direction:column;padding:8px 10px 10px}
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:3px}
+.tab{height:30px;border:0;border-radius:8px;background:transparent;color:var(--mut);font-size:12px;font-weight:600;cursor:pointer}
+.tab.on{background:var(--panel2);color:var(--txt);box-shadow:inset 0 0 0 1px var(--line)}
+.pane{flex:1;min-height:0;overflow-y:auto;margin-top:8px;display:none;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+.pane.on{display:block}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:9px 10px;margin-bottom:7px}
+.card h3{font-size:11px;color:var(--mut);font-weight:600;margin-bottom:6px;display:flex;justify-content:space-between;gap:8px}
+.empty{color:var(--dim);font-size:12px;text-align:center;padding:20px 10px;line-height:1.7}
+
+/* drawer pane */
+.dhead{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:7px}
+.dhead .t{font-size:13px;font-weight:700}
+.dhead .t .cab{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.dhead .r{font-size:10.5px;color:var(--mut);text-align:right}
+.navb{display:flex;gap:4px}
+.navb button{width:28px;height:26px;border-radius:7px;border:1px solid var(--line);background:var(--panel2);color:var(--txt);cursor:pointer}
+.dgrid{display:grid;grid-template-columns:repeat(6,1fr);gap:4px}
+.cell{height:34px;border-radius:7px;border:1px solid var(--line);background:#0b1220;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  cursor:pointer;font-family:'JetBrains Mono';font-size:11px;color:var(--dim);position:relative;line-height:1.1}
+.cell small{font-size:8.5px;font-family:'IBM Plex Sans Thai';opacity:.85}
+.cell.ok{background:rgba(52,211,153,.14);border-color:rgba(52,211,153,.45);color:var(--green)}
+.cell.due{background:rgba(251,191,36,.14);border-color:rgba(251,191,36,.5);color:var(--amber)}
+.cell.lost{background:rgba(248,113,113,.15);border-color:rgba(248,113,113,.5);color:var(--red)}
+.cell.conf{background:rgba(167,139,250,.18);border-color:var(--violet);color:var(--violet)}
+.cell.sel{box-shadow:0 0 0 2px var(--yellow);z-index:1}
+.cell .big{position:absolute;top:1px;right:3px;font-size:8px}
+.item{background:var(--panel2);border-radius:9px;padding:8px 9px;margin-bottom:7px;border:1px solid var(--line)}
+.item .code{font-family:'JetBrains Mono';font-size:15px;font-weight:700;color:var(--yellow);letter-spacing:.5px}
+.item .code b{color:var(--mut);font-weight:500}
+.item .nm{font-size:13px;font-weight:600;margin-top:2px}
+.kvs{display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;margin-top:6px;font-size:11px}
+.kvs .k{color:var(--mut)}
+.pill{font-size:10px;font-weight:700;border-radius:10px;padding:2px 8px;white-space:nowrap}
+.pill.ok{background:rgba(52,211,153,.15);color:var(--green)}
+.pill.due{background:rgba(251,191,36,.15);color:var(--amber)}
+.pill.lost{background:rgba(248,113,113,.15);color:var(--red)}
+.pill.out{background:rgba(135,150,171,.15);color:var(--mut)}
+.pill.conf{background:rgba(167,139,250,.15);color:var(--violet)}
+.lnk{color:var(--cyan);cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+.warn{font-size:11px;color:var(--violet);background:rgba(167,139,250,.08);border:1px solid rgba(167,139,250,.35);border-radius:8px;padding:6px 8px;margin-bottom:7px}
+
+/* cabinets pane */
+.pair{display:grid;grid-template-columns:54px 1fr;gap:8px;padding:6px 0;border-top:1px solid var(--line);align-items:center}
+.pair:first-of-type{border-top:0}
+.pair .pn{font-size:11.5px;font-weight:700}
+.pair .pn small{display:block;font-size:9.5px;color:var(--mut);font-weight:500}
+.cabrow{display:grid;grid-template-columns:12px 1fr 52px;gap:6px;align-items:center;font-size:10.5px;cursor:pointer;padding:2px 0}
+.track{height:7px;border-radius:4px;background:var(--line);overflow:hidden}
+.track b{display:block;height:100%;border-radius:4px}
+.cabrow .n{text-align:right;font-family:'JetBrains Mono';color:var(--mut)}
+.bigrow{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;padding:7px 9px;border-radius:9px;background:var(--panel);border:1px solid var(--line);margin-bottom:5px;cursor:pointer;font-size:11.5px}
+.bigrow .c{font-family:'JetBrains Mono';color:var(--yellow);font-size:11px}
+.bigrow .nm{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bigrow .spot{font-family:'JetBrains Mono';font-size:10.5px;color:var(--cyan)}
+
+/* data pane */
+.field{display:flex;gap:6px;margin-top:6px}
+.field input{flex:1;min-width:0;height:34px;border-radius:8px;border:1px solid var(--line);background:#0b1220;color:var(--txt);padding:0 9px;font-size:11.5px;outline:none}
+.btn{height:34px;padding:0 12px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--txt);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap}
+.btn.pri{background:var(--yellow);border-color:var(--yellow);color:#1a1300}
+.btns{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.note{font-size:11px;color:var(--mut);line-height:1.65}
+.note code{font-family:'JetBrains Mono';font-size:10.5px;background:#0b1220;padding:1px 5px;border-radius:4px;color:var(--yellow)}
+.note ol{padding-left:18px}
+table.cols{width:100%;border-collapse:collapse;font-size:10.5px;margin-top:4px}
+table.cols td{padding:4px 4px;border-top:1px solid var(--line);vertical-align:top}
+table.cols td:first-child{white-space:nowrap;color:var(--yellow);font-weight:600}
+.status{font-size:11px;margin-top:6px}
+</style>
+<script type="importmap">
+{"imports":{
+  "three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+}}
+</script>
+</head>
+<body>
+<div class="frame">
+  <header class="hdr">
+    <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#1a1300" stroke-width="2.2" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="12" cy="12" r="4"/><path d="M12 8v1M12 15v1M8 12h1M15 12h1"/></svg></div>
+    <div class="ttl">
+      <h1>ห้องเซฟทรัพย์จำนำ</h1>
+      <div class="sub"><span class="src" id="src" style="color:var(--amber)"><i></i>ข้อมูลตัวอย่าง</span><span id="srcT"></span></div>
+    </div>
+    <div class="clock mono"><span id="clk">--:--</span><small id="dte">-</small></div>
+  </header>
+
+  <section class="kpis">
+    <div class="kpi"><div class="l">ทรัพย์ในห้องเซฟ</div><div class="v mono" id="kIn">0</div><div class="s" id="kInS">-</div></div>
+    <div class="kpi"><div class="l">ของชิ้นใหญ่</div><div class="v mono" id="kBig" style="color:var(--cyan)">0</div><div class="s">อยู่มุมของใหญ่</div></div>
+    <div class="kpi"><div class="l">ใกล้หลุด/หลุด</div><div class="v mono" id="kDue" style="color:var(--amber)">0</div><div class="s" id="kDueS">≥ 4 เดือน</div></div>
+    <div class="kpi"><div class="l">ยอดเงินในห้อง</div><div class="v mono" id="kAmt">0</div><div class="s">บาท</div></div>
+  </section>
+
+  <section class="view" id="view">
+    <div class="ov ov-top">
+      <div class="search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#e6edf6" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
+        <input id="q" inputmode="search" placeholder="พิมพ์เลขทรัพย์ 8 หลัก เช่น 26110047 หรือชื่อทรัพย์" autocomplete="off">
+        <div class="results" id="results"></div>
+      </div>
+      <div class="chips" id="modes">
+        <button class="chip on" data-m="normal">สีตู้</button>
+        <button class="chip" data-m="fill">ความแน่นลิ้นชัก</button>
+        <button class="chip" data-m="due">ใกล้หลุด <span class="badge" id="dueBadge">0</span></button>
+      </div>
+    </div>
+    <div class="ov legend" id="legend"></div>
+    <div class="ov ov-right">
+      <button class="ibtn" id="bTop" title="มุมบน"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 12h16M12 4v16"/></svg></button>
+      <button class="ibtn" id="b3d" title="มุมมอง 3D">3D</button>
+      <button class="ibtn" id="bBig" title="มุมของใหญ่"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 8l9-5 9 5-9 5z"/><path d="M3 8v8l9 5 9-5V8M12 13v8"/></svg></button>
+    </div>
+    <div class="toast" id="toast"></div>
+  </section>
+
+  <section class="sheet">
+    <nav class="tabs" id="tabs">
+      <button class="tab on" data-t="dr">ลิ้นชัก</button>
+      <button class="tab" data-t="cab">ตู้ทั้งหมด</button>
+      <button class="tab" data-t="big">ของใหญ่</button>
+      <button class="tab" data-t="data">ข้อมูล</button>
+    </nav>
+    <div class="pane on" id="p-dr"><div class="empty">แตะลิ้นชักในโมเดล 3D หรือพิมพ์เลขทรัพย์ 8 หลัก<br>เพื่อดูว่าทรัพย์อยู่ตู้ไหน ลิ้นชักไหน ช่องไหน</div></div>
+    <div class="pane" id="p-cab"></div>
+    <div class="pane" id="p-big"></div>
+    <div class="pane" id="p-data">
+      <div class="card">
+        <h3><span>เชื่อมต่อ Google Sheets</span></h3>
+        <div class="note">วางลิงก์ชีตที่ <b>เผยแพร่เป็น CSV</b> แล้ว (ไฟล์ → แชร์ → เผยแพร่ไปยังเว็บ → เลือกชีต → CSV) หรือลิงก์ชีตที่แชร์แบบ “ทุกคนที่มีลิงก์ดูได้”</div>
+        <div class="field"><input id="sheetUrl" placeholder="https://docs.google.com/spreadsheets/d/..."><button class="btn pri" id="bLoad">เชื่อมต่อ</button></div>
+        <div class="status" id="sheetStatus"></div>
+        <div class="btns">
+          <button class="btn" id="bRefresh">↻ ดึงข้อมูลใหม่</button>
+          <button class="btn" id="bFile">นำเข้าไฟล์ CSV</button>
+          <button class="btn" id="bTpl">ดาวน์โหลดเทมเพลต</button>
+          <button class="btn" id="bSample">ใช้ข้อมูลตัวอย่าง</button>
+          <input type="file" id="file" accept=".csv,text/csv" hidden>
+        </div>
+      </div>
+      <div class="card">
+        <h3><span>คอลัมน์ในชีต (แถวแรกเป็นหัวตาราง)</span></h3>
+        <table class="cols">
+          <tr><td>เลขทรัพย์</td><td>8 หลัก <code class="mono">YYMMCNNN</code> — ต้องมี (ตำแหน่งตู้/ลิ้นชักคำนวณจากเลขนี้)</td></tr>
+          <tr><td>ชื่อทรัพย์</td><td>เช่น สร้อยคอทองคำ 1 บาท</td></tr>
+          <tr><td>ชิ้นใหญ่</td><td>ใส่ <b>ใช่</b> ถ้าวางที่มุมของใหญ่ / เว้นว่างถ้าอยู่ในลิ้นชัก</td></tr>
+          <tr><td>สถานะ</td><td><b>อยู่</b> / <b>ไถ่แล้ว</b> / <b>หลุด</b> / <b>ขายแล้ว</b> (ว่าง = อยู่)</td></tr>
+          <tr><td>ยอดเงิน</td><td>ยอดเงินต้น (บาท) — ไม่บังคับ</td></tr>
+          <tr><td>วันที่รับ</td><td>ไม่บังคับ</td></tr>
+          <tr><td>หมายเหตุ</td><td>ไม่บังคับ</td></tr>
+        </table>
+        <div class="note" style="margin-top:6px">⚠ ไม่ควรใส่ชื่อ-เลขบัตรประชาชนลูกค้าในชีตที่เผยแพร่ เพราะใครมีลิงก์ก็เปิดอ่านได้ (PDPA)</div>
+      </div>
+      <div class="card">
+        <h3><span>กติกาเลขทรัพย์</span></h3>
+        <div class="note">
+          <code>26 11 0 047</code> = ปี ค.ศ. 2026 · เดือน 11 · <b>0 = ตู้ขาว</b> (1 = ตู้เหลือง) · ลำดับที่ 47<br>
+          • คู่ตู้ = ((เดือน − 1) mod 6) + 1 → เดือน 1 กับ 7 ใช้คู่ 1, เดือน 2 กับ 8 ใช้คู่ 2 …<br>
+          • ลิ้นชัก = ⌈ลำดับ ÷ 30⌉ → 001–030 ลิ้นชัก 1, 031–060 ลิ้นชัก 2 … 331–360 ลิ้นชัก 12<br>
+          • ของชิ้นใหญ่ยังนับเป็น 1 ใน 30 ช่องของลิ้นชักนั้น แต่ตัวของวางที่มุมของใหญ่
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+/* =========================================================
+   1) RULES — ticket number  YY MM C NNN
+   ========================================================= */
+const MONTHS = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+const CAB = [ { name: 'ขาว',   hex: 0xe2e8f0, css: '#f1f5f9' },
+              { name: 'เหลือง', hex: 0xfacc15, css: '#facc15' } ];
+const PAIRS = 6, DRAWERS = 12, PER = 30, CAP = DRAWERS * PER; // 360 per cabinet
+const DUE_MONTHS = 4; // ทรัพย์ที่อายุ >= 4 เดือนถือว่า "ใกล้หลุด"
+
+function parseCode(raw) {
+  const c = String(raw ?? '').replace(/\D/g, '');
+  if (c.length !== 8) return { code: c, err: 'เลขทรัพย์ต้องมี 8 หลัก' };
+  const yy = +c.slice(0, 2), mm = +c.slice(2, 4), col = +c[4], seq = +c.slice(5);
+  if (mm < 1 || mm > 12) return { code: c, err: `เดือน "${c.slice(2, 4)}" ไม่ถูกต้อง` };
+  if (col > 1) return { code: c, err: `หลักที่ 5 ต้องเป็น 0 (ขาว) หรือ 1 (เหลือง)` };
+  if (seq < 1 || seq > CAP) return { code: c, err: `ลำดับ ${seq} เกิน ${CAP} (ตู้ละ ${DRAWERS} ลิ้นชัก × ${PER})` };
+  const slot = (mm - 1) % PAIRS;
+  return { code: c, yy, mm, col, seq, slot, drawer: Math.ceil(seq / PER), pos: (seq - 1) % PER + 1 };
+}
+const fmtCode = c => `${c.slice(0, 2)}-${c.slice(2, 4)}-${c[4]}-${c.slice(5)}`;
+const beYY = yy => String((2000 + yy + 543) % 100).padStart(2, '0');
+const monthTxt = (yy, mm) => `${MONTHS[mm - 1]} ${beYY(yy)}`;
+const pairMonths = s => `${MONTHS[s]}/${MONTHS[s + 6]}`;
+const seqRange = d => `${String((d - 1) * PER + 1).padStart(3, '0')}–${String(d * PER).padStart(3, '0')}`;
+
+/* =========================================================
+   2) DATA
+   ========================================================= */
+let items = [];          // parsed rows
+let invalid = [];        // rows with bad codes
+const now = new Date();
+const ageMonths = it => (now.getFullYear() * 12 + now.getMonth()) - ((2000 + it.yy) * 12 + it.mm - 1);
+const present = it => !/ไถ่|ขาย|redeem|sold/i.test(it.status);
+function flag(it) {
+  if (!present(it)) return 'out';
+  if (/หลุด|lost|forfeit/i.test(it.status)) return 'lost';
+  if (ageMonths(it) >= DUE_MONTHS) return 'due';
+  return 'ok';
+}
+const FLAG_TXT = { ok: 'อยู่ในเซฟ', due: 'ใกล้หลุด', lost: 'หลุดจำนำ', out: 'ไม่อยู่ (ไถ่/ขายแล้ว)', conf: 'ช่องซ้ำ' };
+
+// index[slot][col][drawer][pos] -> present items
+let index, bigList;
+function buildIndex() {
+  index = Array.from({ length: PAIRS }, () => Array.from({ length: 2 }, () => Array.from({ length: DRAWERS + 1 }, () => Array.from({ length: PER + 1 }, () => []))));
+  for (const it of items) if (present(it)) index[it.slot][it.col][it.drawer][it.pos].push(it);
+  bigList = items.filter(it => it.big && present(it)).sort((a, b) => a.code.localeCompare(b.code));
+  bigList.forEach((it, i) => it.spot = i);
+}
+const cellItems = (s, c, d, p) => index[s][c][d][p];
+function cellFlag(arr) {
+  if (!arr.length) return '';
+  if (arr.length > 1) return 'conf';
+  return flag(arr[0]);
+}
+function drawerStats(s, c, d) {
+  let n = 0, due = 0, lost = 0, conf = 0, big = 0;
+  for (let p = 1; p <= PER; p++) {
+    const a = index[s][c][d][p]; if (!a.length) continue;
+    n++; if (a.length > 1) conf++;
+    for (const it of a) { const f = flag(it); if (f === 'due') due++; if (f === 'lost') lost++; if (it.big) big++; }
+  }
+  return { n, due, lost, conf, big };
+}
+// which month currently "owns" a pair: newest month (<= now) that maps to the slot
+function activeMonth(s) {
+  for (let k = 0; k < 12; k++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - k, 1);
+    if (d.getMonth() % PAIRS === s) return { yy: d.getFullYear() % 100, mm: d.getMonth() + 1 };
+  }
+}
+
+/* CSV */
+function parseCSV(text) {
+  const rows = []; let row = [], f = '', q = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (q) { if (ch === '"') { if (text[i + 1] === '"') { f += '"'; i++; } else q = false; } else f += ch; }
+    else if (ch === '"') q = true;
+    else if (ch === ',') { row.push(f); f = ''; }
+    else if (ch === '\n' || ch === '\r') { if (ch === '\r' && text[i + 1] === '\n') i++; row.push(f); rows.push(row); row = []; f = ''; }
+    else f += ch;
+  }
+  if (f !== '' || row.length) { row.push(f); rows.push(row); }
+  return rows.filter(r => r.some(x => x.trim() !== ''));
+}
+function rowsToItems(rows) {
+  const h = rows[0].map(x => x.trim().toLowerCase().replace(/^﻿/, ''));
+  const find = (...keys) => h.findIndex(x => keys.some(k => x.includes(k)));
+  const ci = { code: find('เลข', 'code', 'ticket'), name: find('ชื่อ', 'name', 'รายการ'), big: find('ใหญ่', 'big'),
+    status: find('สถานะ', 'status'), amount: find('ยอด', 'เงิน', 'amount'), date: find('วันที่', 'date'), note: find('หมายเหตุ', 'note') };
+  if (ci.code < 0) throw new Error('ไม่พบคอลัมน์ "เลขทรัพย์" ในแถวแรก');
+  const out = [], bad = [];
+  rows.slice(1).forEach((r, i) => {
+    const g = k => ci[k] >= 0 ? (r[ci[k]] ?? '').trim() : '';
+    if (!g('code')) return;
+    const p = parseCode(g('code'));
+    const row = { ...p, row: i + 2, name: g('name') || '(ไม่ระบุชื่อ)', big: /^(ใช่|y|yes|true|1|x|✓|ใหญ่)/i.test(g('big')),
+      status: g('status') || 'อยู่', amount: +g('amount').replace(/[^\d.]/g, '') || 0, date: g('date'), note: g('note') };
+    (p.err ? bad : out).push(row);
+  });
+  return { out, bad };
+}
+
+/* sample data (realistic shape, fake content) */
+function sampleData() {
+  let s = 99; const r = () => (s = (s * 16807) % 2147483647) / 2147483647;
+  const SMALL = [['สร้อยคอทองคำ 1 บาท', 26000, 34000], ['แหวนทองคำ 1 สลึง', 6000, 9000], ['กำไลทองคำ 2 บาท', 52000, 68000], ['ต่างหูทองคำ ครึ่งสลึง', 3000, 5000],
+    ['สร้อยข้อมือทองคำ 2 สลึง', 13000, 17000], ['แหวนเพชร', 8000, 40000], ['นาฬิกาข้อมือ', 2000, 15000], ['โทรศัพท์มือถือ', 2500, 18000], ['แท็บเล็ต', 3000, 12000],
+    ['กล้องถ่ายรูป', 3000, 16000], ['พระเครื่องเลี่ยมทอง', 4000, 20000]];
+  const BIG = [['ทีวี LED 43 นิ้ว', 2500, 5000], ['โน้ตบุ๊ก', 4000, 15000], ['เครื่องตัดหญ้า', 1500, 4000], ['สว่านโรตารี่', 800, 2500], ['กีตาร์โปร่ง', 1000, 4000],
+    ['พัดลมตั้งพื้น', 300, 800], ['ปั๊มน้ำ', 1200, 3500], ['ลำโพงบลูทูธ', 800, 3000], ['เครื่องเชื่อม', 1500, 4500]];
+  const rows = [['เลขทรัพย์', 'ชื่อทรัพย์', 'ชิ้นใหญ่', 'สถานะ', 'ยอดเงิน', 'วันที่รับ', 'หมายเหตุ']];
+  for (let k = 7; k >= 0; k--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - k, 1);
+    const yy = d.getFullYear() % 100, mm = d.getMonth() + 1;
+    for (const col of [0, 1]) {
+      const n = col === 0 ? 140 + Math.floor(r() * 200) : 40 + Math.floor(r() * 140);
+      const nn = k === 0 ? Math.floor(n * (now.getDate() / 30 + 0.15)) : n;
+      for (let q = 1; q <= Math.min(nn, CAP); q++) {
+        const big = r() < (col ? 0.12 : 0.03);
+        const [nm, lo, hi] = (big ? BIG : SMALL)[Math.floor(r() * (big ? BIG : SMALL).length)];
+        // older months: most redeemed; months older than 5: redeemed/sold, a few left over (rotation conflict demo)
+        const pRed = k >= 6 ? 0.985 : k >= 5 ? 0.9 : [0.08, 0.2, 0.35, 0.5, 0.65][k];
+        const roll = r();
+        const st = roll < pRed ? (k >= 5 && r() < 0.3 ? 'ขายแล้ว' : 'ไถ่แล้ว') : (k >= 5 ? 'หลุด' : 'อยู่');
+        const code = `${String(yy).padStart(2, '0')}${String(mm).padStart(2, '0')}${col}${String(q).padStart(3, '0')}`;
+        const day = Math.min(28, 1 + Math.floor(q / (nn / 28 + 0.01)));
+        rows.push([code, nm, big ? 'ใช่' : '', st, String(Math.round((lo + r() * (hi - lo)) / 100) * 100),
+          `${2000 + yy}-${String(mm).padStart(2, '0')}-${String(day).padStart(2, '0')}`, '']);
+      }
+    }
+  }
+  return rows;
+}
+
+/* =========================================================
+   3) THREE.JS SCENE — the vault room
+   ========================================================= */
+const view = document.getElementById('view');
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+view.prepend(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0b1020);
+const camera = new THREE.PerspectiveCamera(48, 1, 0.05, 100);
+const HOME = { pos: new THREE.Vector3(0, 8.6, 9.6), tgt: new THREE.Vector3(0, 0.4, -0.2) };
+camera.position.copy(HOME.pos);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.copy(HOME.tgt);
+Object.assign(controls, { enableDamping: true, dampingFactor: 0.08, maxPolarAngle: Math.PI * 0.48, minDistance: 0.6, maxDistance: 22 });
+
+scene.add(new THREE.HemisphereLight(0xdfe8ff, 0x1a1f33, 0.9));
+const key = new THREE.DirectionalLight(0xffffff, 1.2);
+key.position.set(3, 9, 6); key.castShadow = true; key.shadow.mapSize.set(2048, 2048);
+Object.assign(key.shadow.camera, { left: -6, right: 6, top: 7, bottom: -7, near: 1, far: 25 }); key.shadow.bias = -0.0004;
+scene.add(key);
+const ceil = new THREE.PointLight(0xfff1c7, 0.8, 12); ceil.position.set(0, 3, 0); scene.add(ceil);
+
+// room 6 x 10 m
+const RW = 6, RD = 10, RH = 2.8;
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(RW, RD), new THREE.MeshStandardMaterial({ color: 0x1c2333, roughness: 0.85 }));
+floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; scene.add(floor);
+const grid = new THREE.GridHelper(10, 20, 0x2b3550, 0x232c42); grid.position.y = 0.002; grid.scale.x = 0.6; scene.add(grid);
+const wallMat = new THREE.MeshStandardMaterial({ color: 0x334155, transparent: true, opacity: 0.4, side: THREE.DoubleSide });
+for (const [w, x, z, ry] of [[RW, 0, -RD / 2, 0], [RD, -RW / 2, 0, Math.PI / 2], [RD, RW / 2, 0, Math.PI / 2]]) {
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(w, RH), wallMat); m.position.set(x, RH / 2, z); m.rotation.y = ry; scene.add(m);
+}
+const edge = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(RW, RH, RD)), new THREE.LineBasicMaterial({ color: 0xfacc15, transparent: true, opacity: 0.3 }));
+edge.position.y = RH / 2; scene.add(edge);
+// vault door (front wall)
+const door = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 0.9, 0.18, 40), new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.85, roughness: 0.3, transparent: true, opacity: 0.35 }));
+door.rotation.x = Math.PI / 2; door.position.set(0, 1.05, RD / 2); scene.add(door);
+const wheel = new THREE.Mesh(new THREE.TorusGeometry(0.35, 0.04, 8, 24), new THREE.MeshStandardMaterial({ color: 0xfacc15, metalness: 0.8, roughness: 0.3 }));
+wheel.position.set(0, 1.05, RD / 2 - 0.12); scene.add(wheel);
+
+function label(text, { color = '#e6edf6', border = '#facc15', size = 0.32 } = {}) {
+  const c = document.createElement('canvas'), ctx = c.getContext('2d');
+  const font = '600 44px "IBM Plex Sans Thai", sans-serif'; ctx.font = font;
+  const w = Math.ceil(ctx.measureText(text).width) + 44; c.width = w; c.height = 74;
+  ctx.font = font; ctx.fillStyle = 'rgba(10,16,26,.88)'; ctx.strokeStyle = border; ctx.lineWidth = 4;
+  ctx.beginPath(); ctx.roundRect(2, 2, w - 4, 70, 18); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = color; ctx.textBaseline = 'middle'; ctx.fillText(text, 22, 39);
+  const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthTest: false })); s.scale.set(size * w / 74, size, 1); s.renderOrder = 10; return s;
+}
+
+// drawer-number textures
+const numTex = [null];
+for (let d = 1; d <= DRAWERS; d++) {
+  const c = document.createElement('canvas'); c.width = 128; c.height = 80; const x = c.getContext('2d');
+  x.fillStyle = '#ffffff'; x.fillRect(0, 0, 128, 80);
+  x.fillStyle = 'rgba(0,0,0,.18)'; x.fillRect(0, 0, 128, 3); x.fillRect(0, 77, 128, 3);
+  x.fillStyle = '#334155'; x.font = 'bold 34px "JetBrains Mono", monospace'; x.textAlign = 'center'; x.textBaseline = 'middle';
+  x.fillText(String(d), 64, 30);
+  x.fillStyle = '#64748b'; x.fillRect(44, 56, 40, 8);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; numTex.push(t);
+}
+
+// cabinets: 6 pairs (white+yellow). pairs 1-3 on left wall, 4-6 on right wall, front→back
+const CW = 0.9, CH = 1.92, CD = 0.6, DW = 0.42, DH = 0.27, ROW_H = 0.29;
+const cabinets = [];  // [slot][col]
+const fronts = [];
+const bodyGeo = new THREE.BoxGeometry(CW, CH, CD);
+const frontGeo = new THREE.BoxGeometry(DW, DH, 0.025);
+const trayGeo = new THREE.BoxGeometry(DW - 0.04, 0.05, 0.54);
+for (let s = 0; s < PAIRS; s++) {
+  cabinets.push([]);
+  const left = s < 3, k = s % 3;
+  for (let col = 0; col < 2; col++) {
+    const idx = k * 2 + col;
+    const g = new THREE.Group();
+    g.position.set(left ? -RW / 2 + CD / 2 + 0.05 : RW / 2 - CD / 2 - 0.05, 0, 3.7 - idx * 0.95 - k * 0.4);
+    g.rotation.y = left ? Math.PI / 2 : -Math.PI / 2;
+    const body = new THREE.Mesh(bodyGeo, new THREE.MeshStandardMaterial({ color: CAB[col].hex, metalness: 0.35, roughness: 0.5 }));
+    body.material.color.multiplyScalar(0.78);
+    body.position.y = CH / 2; body.castShadow = body.receiveShadow = true; g.add(body);
+    const drawers = [null];
+    for (let d = 1; d <= DRAWERS; d++) {
+      const colI = Math.floor((d - 1) / 6), rowTop = (d - 1) % 6;
+      const dg = new THREE.Group();
+      dg.position.set(colI === 0 ? -0.22 : 0.22, 0.09 + (5 - rowTop) * ROW_H + DH / 2 + 0.02, CD / 2);
+      const fm = new THREE.MeshStandardMaterial({ color: CAB[col].hex, map: numTex[d], metalness: 0.25, roughness: 0.45 });
+      const front = new THREE.Mesh(frontGeo, fm); front.position.z = 0.013; front.castShadow = true;
+      front.userData = { s, col, d }; dg.add(front); fronts.push(front);
+      const tray = new THREE.Mesh(trayGeo, new THREE.MeshStandardMaterial({ color: 0x475569, metalness: 0.5, roughness: 0.5 }));
+      tray.position.set(0, -DH / 2 + 0.04, -0.27); tray.visible = false; dg.add(tray);
+      g.add(dg);
+      drawers.push({ g: dg, front, tray, z0: CD / 2, open: 0, target: 0 });
+    }
+    scene.add(g);
+    cabinets[s].push({ s, col, g, body, drawers });
+  }
+}
+// pair labels
+const pairLabels = [];
+document.fonts.ready.then(() => {
+  for (let s = 0; s < PAIRS; s++) {
+    const a = cabinets[s][0].g.position, b = cabinets[s][1].g.position;
+    const l = label(`คู่ ${s + 1} · ${pairMonths(s)}`, { size: 0.28 });
+    l.position.set((a.x + b.x) / 2, CH + 0.32, (a.z + b.z) / 2); scene.add(l); pairLabels.push(l);
+  }
+  const bl = label('📦 มุมของใหญ่', { color: '#22d3ee', border: '#22d3ee', size: 0.34 });
+  bl.position.set(0, 1.5, BIG_Z0 - 0.6); scene.add(bl);
+});
+
+// big-item corner (back of room)
+const BIG_Z0 = -3.05, BIG_COLS = 8, BIG_ROWS = 3, BIG_SP = 0.68;
+const bigFloor = new THREE.Mesh(new THREE.PlaneGeometry(RW - 0.4, 1.9), new THREE.MeshBasicMaterial({ color: 0x22d3ee, transparent: true, opacity: 0.07 }));
+bigFloor.rotation.x = -Math.PI / 2; bigFloor.position.set(0, 0.006, BIG_Z0 - 0.7); scene.add(bigFloor);
+const bigEdge = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.PlaneGeometry(RW - 0.4, 1.9)), new THREE.LineBasicMaterial({ color: 0x22d3ee }));
+bigEdge.rotation.x = -Math.PI / 2; bigEdge.position.copy(bigFloor.position); scene.add(bigEdge);
+const bigPos = i => {
+  const layer = Math.floor(i / (BIG_COLS * BIG_ROWS)), j = i % (BIG_COLS * BIG_ROWS);
+  return new THREE.Vector3(-((BIG_COLS - 1) * BIG_SP) / 2 + (j % BIG_COLS) * BIG_SP, 0.21 + layer * 0.44, BIG_Z0 - Math.floor(j / BIG_COLS) * BIG_SP);
+};
+const spotName = i => `จุด ${String(i + 1).padStart(2, '0')}`;
+const BIG_MAX = 240;
+const bigMesh = new THREE.InstancedMesh(new THREE.BoxGeometry(0.48, 0.42, 0.48), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.8 }), BIG_MAX);
+bigMesh.castShadow = true; bigMesh.count = 0; scene.add(bigMesh);
+
+// open-drawer contents (one InstancedMesh reused)
+const trayItems = new THREE.InstancedMesh(new THREE.BoxGeometry(0.058, 0.04, 0.066), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.6 }), PER);
+trayItems.visible = false;
+const slotLocal = p => { const i = p - 1; return new THREE.Vector3(-0.15 + (i % 5) * 0.075, -DH / 2 + 0.085, -0.045 - Math.floor(i / 5) * 0.085); };
+const marker = new THREE.Mesh(new THREE.ConeGeometry(0.035, 0.08, 12), new THREE.MeshBasicMaterial({ color: 0xfacc15 }));
+marker.rotation.x = Math.PI; marker.visible = false;
+const bigMarker = new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.26, 16), new THREE.MeshBasicMaterial({ color: 0xfacc15 }));
+bigMarker.rotation.x = Math.PI; bigMarker.visible = false; scene.add(bigMarker);
+const linkLine = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]),
+  new THREE.LineDashedMaterial({ color: 0x22d3ee, dashSize: 0.12, gapSize: 0.08, depthTest: false }));
+linkLine.renderOrder = 8; linkLine.visible = false; scene.add(linkLine);
+const selOutline = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(DW + 0.03, DH + 0.03, 0.04)),
+  new THREE.LineBasicMaterial({ color: 0xfacc15, depthTest: false, transparent: true }));
+selOutline.renderOrder = 9; selOutline.visible = false;
+
+/* =========================================================
+   4) VISUAL STATE
+   ========================================================= */
+const COL = { ok: 0x34d399, due: 0xfbbf24, lost: 0xf87171, conf: 0xa78bfa, big: 0x22d3ee, empty: 0x1e293b };
+let mode = 'normal';
+const tc = new THREE.Color();
+function paintFronts() {
+  for (const f of fronts) {
+    const { s, col, d } = f.userData, st = drawerStats(s, col, d), m = f.material;
+    if (mode === 'normal') m.color.setHex(CAB[col].hex);
+    else if (mode === 'fill') m.color.setHSL(0.33 * (1 - st.n / PER), 0.75, st.n ? 0.5 : 0.18);
+    else m.color.setHex(st.conf ? COL.conf : st.lost ? COL.lost : st.due ? COL.due : 0x334155);
+    f.userData.hot = mode === 'due' && (st.conf || st.lost || st.due);
+  }
+}
+function paintBig() {
+  const M = new THREE.Matrix4();
+  bigMesh.count = Math.min(bigList.length, BIG_MAX);
+  bigList.slice(0, BIG_MAX).forEach((it, i) => {
+    M.makeTranslation(bigPos(i)); bigMesh.setMatrixAt(i, M);
+    const f = flag(it);
+    bigMesh.setColorAt(i, tc.setHex(f === 'ok' ? 0xc8925a : COL[f]));
+  });
+  bigMesh.instanceMatrix.needsUpdate = true; if (bigMesh.instanceColor) bigMesh.instanceColor.needsUpdate = true;
+}
+function fillTray(s, col, d) {
+  const M = new THREE.Matrix4();
+  for (let p = 1; p <= PER; p++) {
+    const a = cellItems(s, col, d, p), f = cellFlag(a);
+    const v = slotLocal(p);
+    if (!a.length) { M.makeScale(0.9, 0.12, 0.9).setPosition(v.x, v.y - 0.017, v.z); trayItems.setColorAt(p - 1, tc.setHex(COL.empty)); }
+    else if (a.length === 1 && a[0].big) { M.makeScale(0.9, 0.25, 0.9).setPosition(v.x, v.y - 0.014, v.z); trayItems.setColorAt(p - 1, tc.setHex(COL.big)); }
+    else { M.makeTranslation(v.x, v.y, v.z); trayItems.setColorAt(p - 1, tc.setHex(COL[f])); }
+    trayItems.setMatrixAt(p - 1, M);
+  }
+  trayItems.instanceMatrix.needsUpdate = true; trayItems.instanceColor.needsUpdate = true;
+}
+
+/* =========================================================
+   5) SELECTION + CAMERA
+   ========================================================= */
+let sel = null;   // { s, col, d, p, code }
+let fly = null;
+function flyTo(tgt, pos, dur = 0.9) { fly = { t: 0, dur, t0: controls.target.clone(), p0: camera.position.clone(), t1: tgt.clone(), p1: pos.clone() }; }
+function cabNormal(cab) { return new THREE.Vector3(Math.sin(cab.g.rotation.y), 0, Math.cos(cab.g.rotation.y)); }
+
+function openDrawer(s, col, d, p = null, code = null, doFly = true) {
+  // close the previous drawer
+  if (sel) { const pd = cabinets[sel.s][sel.col].drawers[sel.d]; if (!(sel.s === s && sel.col === col && sel.d === d)) pd.target = 0; }
+  const cab = cabinets[s][col], dr = cab.drawers[d];
+  dr.target = 0.44; dr.tray.visible = true;
+  dr.g.add(trayItems); trayItems.visible = true; fillTray(s, col, d);
+  dr.g.add(selOutline); selOutline.position.set(0, 0, 0.013); selOutline.visible = true;
+  dr.g.add(marker);
+  sel = { s, col, d, p, code };
+  placeMarkers();
+  if (doFly) {
+    const n = cabNormal(cab);
+    const P = cab.g.localToWorld(new THREE.Vector3(dr.g.position.x, dr.g.position.y, dr.z0 + 0.17)); // tray centre when open
+    flyTo(P.clone().add(new THREE.Vector3(0, 0.1, 0)), P.clone().addScaledVector(n, 0.55).add(new THREE.Vector3(0, 0.85, 0)));
+  }
+  setTab('dr'); renderDrawer();
+}
+function placeMarkers() {
+  marker.visible = bigMarker.visible = linkLine.visible = false;
+  if (!sel || !sel.p) return;
+  const v = slotLocal(sel.p); marker.position.set(v.x, v.y + 0.09, v.z); marker.visible = true;
+  const it = cellItems(sel.s, sel.col, sel.d, sel.p).find(x => !sel.code || x.code === sel.code) || items.find(x => x.code === sel.code);
+  if (it && it.big && present(it) && it.spot < BIG_MAX) {
+    const bp = bigPos(it.spot); bigMarker.position.set(bp.x, bp.y + 0.5, bp.z); bigMarker.visible = true; linkLine.visible = true;
+  }
+}
+function updateLink() {
+  if (!linkLine.visible) return;
+  const a = marker.getWorldPosition(new THREE.Vector3()), b = bigMarker.position.clone().setY(bigMarker.position.y - 0.15);
+  linkLine.geometry.setFromPoints([a, b]); linkLine.computeLineDistances();
+}
+function focusCode(raw) {
+  const p = parseCode(raw);
+  if (p.err) { toast(p.err); return; }
+  openDrawer(p.slot, p.col, p.drawer, p.pos, p.code);
+  const it = items.find(x => x.code === p.code);
+  toast(`${fmtCode(p.code)} → ตู้${CAB[p.col].name} คู่ ${p.slot + 1} · ลิ้นชัก ${p.drawer} · ช่อง ${p.pos}${it && it.big && present(it) ? ' · ของใหญ่' : ''}`);
+}
+function flyBig(i = null) {
+  if (i != null && i < BIG_MAX) { const b = bigPos(i); flyTo(b, b.clone().add(new THREE.Vector3(0, 2, 2.6))); }
+  else flyTo(new THREE.Vector3(0, 0.3, BIG_Z0 - 0.7), new THREE.Vector3(0, 3.6, BIG_Z0 + 3.2));
+}
+
+// picking
+const ray = new THREE.Raycaster(), ptr = new THREE.Vector2(); let down = null;
+renderer.domElement.addEventListener('pointerdown', e => down = { x: e.clientX, y: e.clientY });
+renderer.domElement.addEventListener('pointerup', e => {
+  if (!down || Math.hypot(e.clientX - down.x, e.clientY - down.y) > 6) return;
+  const r = renderer.domElement.getBoundingClientRect();
+  ptr.set((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1);
+  ray.setFromCamera(ptr, camera);
+  const hits = ray.intersectObjects([...fronts, bigMesh, ...(trayItems.visible ? [trayItems] : [])], false);
+  const h = hits[0]; if (!h) return;
+  if (h.object === trayItems && sel) { sel.p = h.instanceId + 1; sel.code = null; placeMarkers(); renderDrawer(); return; }
+  if (h.object === bigMesh) { const it = bigList[h.instanceId]; if (it) focusCode(it.code); return; }
+  const { s, col, d } = h.object.userData;
+  if (sel && sel.s === s && sel.col === col && sel.d === d) { closeDrawer(); return; }
+  openDrawer(s, col, d);
+});
+controls.addEventListener('start', () => fly = null);
+function closeDrawer() {
+  if (!sel) return;
+  cabinets[sel.s][sel.col].drawers[sel.d].target = 0;
+  selOutline.visible = marker.visible = bigMarker.visible = linkLine.visible = false;
+  sel = null; renderDrawer();
+}
+
+/* =========================================================
+   6) UI
+   ========================================================= */
+const $ = id => document.getElementById(id);
+const fmt = n => n.toLocaleString('th-TH');
+const money = n => n >= 1e6 ? (n / 1e6).toFixed(2) + 'M' : n >= 1e3 ? (n / 1e3).toFixed(0) + 'K' : String(n);
+function setTab(t) {
+  document.querySelectorAll('.tab').forEach(x => x.classList.toggle('on', x.dataset.t === t));
+  document.querySelectorAll('.pane').forEach(x => x.classList.toggle('on', x.id === 'p-' + t));
+}
+$('tabs').addEventListener('click', e => { const t = e.target.closest('.tab'); if (t) setTab(t.dataset.t); });
+let toastT;
+function toast(m) { const t = $('toast'); t.textContent = m; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2600); }
+
+function renderKpi() {
+  const pr = items.filter(present);
+  $('kIn').textContent = fmt(pr.length);
+  $('kInS').textContent = `ขาว ${fmt(pr.filter(x => !x.col).length)} · เหลือง ${fmt(pr.filter(x => x.col).length)}`;
+  $('kBig').textContent = fmt(bigList.length);
+  const due = pr.filter(x => flag(x) === 'due').length, lost = pr.filter(x => flag(x) === 'lost').length;
+  $('kDue').textContent = fmt(due + lost); $('kDueS').textContent = `ใกล้หลุด ${due} · หลุด ${lost}`;
+  $('kAmt').textContent = money(pr.reduce((s, x) => s + x.amount, 0));
+  let conf = 0; for (let s = 0; s < PAIRS; s++) for (let c = 0; c < 2; c++) for (let d = 1; d <= DRAWERS; d++) conf += drawerStats(s, c, d).conf;
+  $('dueBadge').textContent = due + lost + conf;
+}
+function itemCard(it) {
+  const f = flag(it);
+  return `<div class="item">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:6px"><span class="code">${fmtCode(it.code)}</span><span class="pill ${f}">${FLAG_TXT[f]}</span></div>
+    <div class="nm">${esc(it.name)}${it.big ? ' <span class="pill" style="background:rgba(34,211,238,.15);color:var(--cyan)">ของใหญ่</span>' : ''}</div>
+    <div class="kvs">
+      <span><span class="k">รับจำนำ</span> ${monthTxt(it.yy, it.mm)}</span><span><span class="k">อายุ</span> ${ageMonths(it)} เดือน</span>
+      <span><span class="k">ยอดเงิน</span> ${it.amount ? fmt(it.amount) + ' ฿' : '-'}</span><span><span class="k">สถานะในชีต</span> ${esc(it.status)}</span>
+      ${it.date ? `<span><span class="k">วันที่รับ</span> ${esc(it.date)}</span>` : ''}${it.note ? `<span><span class="k">หมายเหตุ</span> ${esc(it.note)}</span>` : ''}
+    </div>
+    ${it.big && present(it) ? `<div style="margin-top:6px;font-size:11.5px">📦 ตัวของวางที่มุมของใหญ่ <b style="color:var(--cyan)">${spotName(it.spot)}</b> · <span class="lnk" data-big="${it.spot}">ดูในโมเดล</span></div>` : ''}
+  </div>`;
+}
+function renderDrawer() {
+  const el = $('p-dr');
+  if (!sel) { el.innerHTML = `<div class="empty">แตะลิ้นชักในโมเดล 3D หรือพิมพ์เลขทรัพย์ 8 หลัก<br>เพื่อดูว่าทรัพย์อยู่ตู้ไหน ลิ้นชักไหน ช่องไหน</div>`; return; }
+  const { s, col, d, p } = sel, st = drawerStats(s, col, d), am = activeMonth(s);
+  let html = `<div class="dhead"><div class="t"><span class="cab" style="background:${CAB[col].css}"></span>ตู้${CAB[col].name} คู่ ${s + 1} · ลิ้นชัก ${d}
+      <div style="font-size:10.5px;color:var(--mut);font-weight:500;margin-top:1px">ลำดับ ${seqRange(d)} · เดือน ${pairMonths(s)} (ปัจจุบัน ${monthTxt(am.yy, am.mm)})</div></div>
+    <div class="navb"><button data-nav="-1">‹</button><button data-nav="1">›</button><button data-nav="x">✕</button></div></div>`;
+  if (st.conf) html += `<div class="warn">⚠ มี ${st.conf} ช่องที่มีทรัพย์มากกว่า 1 ชิ้น (ของเดือนเก่าที่ยังไม่ออกจากตู้ ตอนวนกลับมาใช้คู่เดิม) ควรตรวจสอบ</div>`;
+  if (p) {
+    const a = cellItems(s, col, d, p);
+    if (a.length) html += a.map(itemCard).join('');
+    else {
+      const code = sel.code || '';
+      const any = code && items.find(x => x.code === code);
+      html += `<div class="item"><div class="code">${code ? fmtCode(code) : `ช่อง ${p}`}</div><div class="nm" style="color:var(--mut)">${any ? `ไม่อยู่ในเซฟ — สถานะ: ${esc(any.status)}` : code ? 'ไม่พบเลขนี้ในชีต' : 'ช่องว่าง'}</div>
+        <div style="font-size:11px;color:var(--mut);margin-top:3px">ตำแหน่งตามเลข: ตู้${CAB[col].name} คู่ ${s + 1} · ลิ้นชัก ${d} · ช่อง ${p}</div></div>`;
+    }
+  }
+  html += `<div class="card" style="padding:8px"><h3><span>ช่องในลิ้นชัก (${st.n}/${PER})</span><span>${st.big ? `📦 ${st.big} ของใหญ่` : ''}</span></h3><div class="dgrid">`;
+  for (let q = 1; q <= PER; q++) {
+    const a = cellItems(s, col, d, q), f = cellFlag(a), seq = (d - 1) * PER + q;
+    html += `<div class="cell ${f} ${p === q ? 'sel' : ''}" data-p="${q}">${String(seq).padStart(3, '0')}${a.some(x => x.big) ? '<span class="big">📦</span>' : ''}<small>ช่อง ${q}</small></div>`;
+  }
+  html += `</div></div>`;
+  el.innerHTML = html;
+}
+$('p-dr').addEventListener('click', e => {
+  const c = e.target.closest('[data-p]');
+  if (c) { sel.p = +c.dataset.p; sel.code = null; placeMarkers(); renderDrawer(); return; }
+  const b = e.target.closest('[data-big]'); if (b) { flyBig(+b.dataset.big); return; }
+  const n = e.target.closest('[data-nav]'); if (!n) return;
+  if (n.dataset.nav === 'x') return closeDrawer();
+  let d = sel.d + +n.dataset.nav; if (d < 1) d = DRAWERS; if (d > DRAWERS) d = 1;
+  openDrawer(sel.s, sel.col, d);
+});
+function renderCabs() {
+  let html = `<div class="card"><h3><span>6 คู่ตู้ · ตู้ละ ${DRAWERS} ลิ้นชัก × ${PER} = ${CAP} เลข</span><span>แตะเพื่อไปที่ตู้</span></h3>`;
+  for (let s = 0; s < PAIRS; s++) {
+    const am = activeMonth(s);
+    html += `<div class="pair"><div class="pn">คู่ ${s + 1}<small>${pairMonths(s)}</small><small style="color:var(--yellow)">ใช้: ${monthTxt(am.yy, am.mm)}</small></div><div>`;
+    for (const col of [0, 1]) {
+      let n = 0, due = 0, conf = 0; for (let d = 1; d <= DRAWERS; d++) { const st = drawerStats(s, col, d); n += st.n; due += st.due + st.lost; conf += st.conf; }
+      html += `<div class="cabrow" data-s="${s}" data-c="${col}"><i class="sw" style="background:${CAB[col].css}"></i>
+        <div><div class="track"><b style="width:${n / CAP * 100}%;background:${col ? 'var(--yellow)' : 'var(--white)'}"></b></div>
+        <div style="font-size:9.5px;color:var(--mut);margin-top:2px">ตู้${CAB[col].name}${due ? ` · <span style="color:var(--amber)">⚠ ${due}</span>` : ''}${conf ? ` · <span style="color:var(--violet)">ซ้ำ ${conf}</span>` : ''}</div></div>
+        <span class="n">${n}/${CAP}</span></div>`;
+    }
+    html += `</div></div>`;
+  }
+  html += `</div>`;
+  if (invalid.length) html += `<div class="card"><h3><span style="color:var(--red)">เลขทรัพย์ไม่ถูกต้องในชีต (${invalid.length})</span></h3>${invalid.slice(0, 30).map(r =>
+    `<div style="font-size:11px;padding:3px 0;border-top:1px solid var(--line)">แถว ${r.row}: <span class="mono">${esc(r.code || '-')}</span> — ${r.err}</div>`).join('')}</div>`;
+  $('p-cab').innerHTML = html;
+}
+$('p-cab').addEventListener('click', e => {
+  const r = e.target.closest('[data-s]'); if (!r) return;
+  const cab = cabinets[+r.dataset.s][+r.dataset.c], n = cabNormal(cab), P = cab.g.position.clone().setY(1);
+  closeDrawer(); flyTo(P, P.clone().addScaledVector(n, 2.6).add(new THREE.Vector3(0, 0.9, 0)));
+});
+function renderBig() {
+  $('p-big').innerHTML = bigList.length ? `<div class="note" style="margin:0 2px 6px">ของชิ้นใหญ่ ${bigList.length} ชิ้น · ยังนับเป็น 1 ช่องในลิ้นชักตามเลข</div>` + bigList.map(it => {
+    const f = flag(it);
+    return `<div class="bigrow" data-code="${it.code}"><span class="spot">${spotName(it.spot)}</span><span class="nm"><span class="c">${fmtCode(it.code)}</span> ${esc(it.name)}</span><span class="pill ${f}">${FLAG_TXT[f]}</span></div>`;
+  }).join('') : `<div class="empty">ไม่มีของชิ้นใหญ่ในห้องเซฟ</div>`;
+}
+$('p-big').addEventListener('click', e => { const r = e.target.closest('[data-code]'); if (r) { focusCode(r.dataset.code); } });
+
+function renderLegend() {
+  const el = $('legend');
+  if (mode === 'normal') el.innerHTML = `<span><i class="sw" style="background:#f1f5f9"></i>ตู้ขาว (หลัก 5 = 0)</span><span><i class="sw" style="background:#facc15"></i>ตู้เหลือง (= 1)</span><span><i class="sw" style="background:#c8925a"></i>ของใหญ่</span>`;
+  else if (mode === 'fill') el.innerHTML = `<span>ช่องที่ใช้ 0 <i class="grad"></i> 30</span>`;
+  else el.innerHTML = `<span><i class="sw" style="background:#fbbf24"></i>ใกล้หลุด ≥${DUE_MONTHS} ด.</span><span><i class="sw" style="background:#f87171"></i>หลุด</span><span><i class="sw" style="background:#a78bfa"></i>ช่องซ้ำ</span>`;
+}
+$('modes').addEventListener('click', e => { const c = e.target.closest('.chip'); if (!c) return; mode = c.dataset.m;
+  document.querySelectorAll('#modes .chip').forEach(x => x.classList.toggle('on', x === c)); paintFronts(); renderLegend(); });
+$('bTop').onclick = () => { closeDrawer(); flyTo(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 13, 0.01)); };
+$('b3d').onclick = () => { closeDrawer(); flyTo(HOME.tgt, HOME.pos); };
+$('bBig').onclick = () => flyBig();
+
+// search
+const qEl = $('q'), resEl = $('results');
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+function search() {
+  const raw = qEl.value.trim(); if (!raw) { resEl.classList.remove('show'); return; }
+  const digits = raw.replace(/\D/g, ''), low = raw.toLowerCase();
+  let out = [];
+  if (digits.length === 8) {
+    const p = parseCode(digits), it = items.find(x => x.code === digits);
+    out.push(p.err ? `<div class="res" style="color:var(--red)">${p.err}</div>` :
+      `<div class="res" data-code="${digits}"><span><span class="c">${fmtCode(digits)}</span> ${it ? esc(it.name) : '<span style="color:var(--mut)">(ไม่มีในชีต)</span>'}</span><span class="loc">${CAB[p.col].name} คู่${p.slot + 1} · ล.${p.drawer} · ช่อง ${p.pos}</span></div>`);
+  }
+  const hits = items.filter(x => x.code !== digits && ((digits.length >= 3 && x.code.includes(digits)) || (!/^\d+$/.test(raw) && x.name.toLowerCase().includes(low))))
+    .sort((a, b) => present(b) - present(a)).slice(0, 15);
+  out = out.concat(hits.map(x => `<div class="res" data-code="${x.code}"><span><span class="c">${fmtCode(x.code)}</span> ${esc(x.name)}${present(x) ? '' : ' <span style="color:var(--dim)">(ไม่อยู่)</span>'}</span><span class="loc">${CAB[x.col].name} คู่${x.slot + 1} · ล.${x.drawer}</span></div>`));
+  resEl.innerHTML = out.length ? out.join('') : `<div class="res" style="color:var(--mut)">${digits.length && digits.length < 8 ? 'พิมพ์ให้ครบ 8 หลัก หรือพิมพ์ชื่อทรัพย์' : 'ไม่พบ'}</div>`;
+  resEl.classList.add('show');
+}
+qEl.addEventListener('input', search);
+qEl.addEventListener('keydown', e => { if (e.key === 'Enter') { const f = resEl.querySelector('[data-code]'); if (f) { focusCode(f.dataset.code); resEl.classList.remove('show'); qEl.blur(); } } });
+resEl.addEventListener('click', e => { const r = e.target.closest('[data-code]'); if (!r) return; focusCode(r.dataset.code); resEl.classList.remove('show'); qEl.blur(); });
+document.addEventListener('pointerdown', e => { if (!e.target.closest('.search')) resEl.classList.remove('show'); });
+
+/* data source */
+const LS = 'vault.sheetUrl';
+function toCsvUrl(u) {
+  u = u.trim(); if (!u) return '';
+  if (/\/pub(\?|$)/.test(u) || /\/pubhtml/.test(u)) return u.replace('/pubhtml', '/pub').replace(/output=\w+/, 'output=csv') + (/output=/.test(u) ? '' : (u.includes('?') ? '&' : '?') + 'output=csv');
+  const m = u.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
+  if (m && !u.includes('/d/e/')) { const gid = (u.match(/[#&?]gid=(\d+)/) || [])[1]; return `https://docs.google.com/spreadsheets/d/${m[1]}/export?format=csv${gid ? '&gid=' + gid : ''}`; }
+  return u;
+}
+function setSource(kind, txt) {
+  const c = { sample: 'var(--amber)', sheet: 'var(--green)', file: 'var(--cyan)', err: 'var(--red)' }[kind];
+  $('src').style.color = c; $('src').innerHTML = `<i></i>${txt}`;
+  $('srcT').textContent = kind === 'sheet' || kind === 'file' ? `อัปเดต ${new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}` : '';
+}
+function loadRows(rows) {
+  const { out, bad } = rowsToItems(rows);
+  items = out; invalid = bad; buildIndex();
+  paintFronts(); paintBig(); renderKpi(); renderCabs(); renderBig();
+  if (sel) { fillTray(sel.s, sel.col, sel.d); placeMarkers(); renderDrawer(); }
+  return out.length;
+}
+async function loadSheet(u, quiet = false) {
+  const url = toCsvUrl(u);
+  if (!quiet) $('sheetStatus').innerHTML = `<span style="color:var(--mut)">กำลังโหลด…</span>`;
+  try {
+    const r = await fetch(url, { cache: 'no-store' });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const text = await r.text();
+    if (/^\s*<!doctype html|<html/i.test(text)) throw new Error('ได้หน้าเว็บแทน CSV — ชีตยังไม่ได้เผยแพร่/แชร์');
+    const n = loadRows(parseCSV(text));
+    setSource('sheet', 'Google Sheets');
+    $('sheetStatus').innerHTML = `<span style="color:var(--green)">✓ โหลด ${fmt(n)} รายการ${invalid.length ? ` · <span style="color:var(--red)">เลขผิด ${invalid.length} แถว (ดูแท็บ “ตู้ทั้งหมด”)</span>` : ''}</span>`;
+  } catch (e) {
+    setSource('err', 'โหลดชีตไม่สำเร็จ');
+    $('sheetStatus').innerHTML = `<span style="color:var(--red)">✕ ${esc(e.message)}</span><br><span style="color:var(--mut)">ตรวจว่าได้ “เผยแพร่ไปยังเว็บ” เป็น CSV หรือแชร์แบบทุกคนที่มีลิงก์ดูได้แล้ว</span>`;
+  }
+}
+$('bLoad').onclick = () => { const u = $('sheetUrl').value.trim(); if (!u) return; localStorage.setItem(LS, u); loadSheet(u); };
+$('bRefresh').onclick = () => { const u = localStorage.getItem(LS); u ? loadSheet(u) : toast('ยังไม่ได้เชื่อมต่อ Google Sheets'); };
+$('bSample').onclick = () => { localStorage.removeItem(LS); $('sheetUrl').value = ''; loadRows(sampleData()); setSource('sample', 'ข้อมูลตัวอย่าง'); $('sheetStatus').textContent = ''; toast('ใช้ข้อมูลตัวอย่าง'); };
+$('bFile').onclick = () => $('file').click();
+$('file').onchange = async e => {
+  const f = e.target.files[0]; if (!f) return;
+  try { const n = loadRows(parseCSV(await f.text())); setSource('file', 'ไฟล์ ' + f.name); toast(`นำเข้า ${fmt(n)} รายการ`); }
+  catch (err) { toast(err.message); }
+  e.target.value = '';
+};
+$('bTpl').onclick = () => {
+  const rows = [['เลขทรัพย์', 'ชื่อทรัพย์', 'ชิ้นใหญ่', 'สถานะ', 'ยอดเงิน', 'วันที่รับ', 'หมายเหตุ'],
+    ['26110001', 'สร้อยคอทองคำ 1 บาท', '', 'อยู่', '28000', '2026-11-01', ''], ['26110002', 'แหวนทองคำ 1 สลึง', '', 'อยู่', '7000', '2026-11-01', ''],
+    ['26111001', 'ทีวี LED 43 นิ้ว', 'ใช่', 'อยู่', '3500', '2026-11-02', 'วางมุมของใหญ่'], ['26100047', 'นาฬิกาข้อมือ', '', 'ไถ่แล้ว', '4500', '2026-10-05', '']];
+  const blob = new Blob(['﻿' + rows.map(r => r.join(',')).join('\n')], { type: 'text/csv' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'vault-template.csv'; a.click();
+};
+
+function tick() {
+  const d = new Date();
+  $('clk').textContent = d.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', hour12: false });
+  $('dte').textContent = d.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' });
+}
+
+/* =========================================================
+   7) LOOP
+   ========================================================= */
+function resize() {
+  const w = view.clientWidth, h = view.clientHeight;
+  renderer.setSize(w, h, false); camera.aspect = w / h; camera.fov = w / h < 1 ? 56 : 48; camera.updateProjectionMatrix();
+}
+new ResizeObserver(resize).observe(view); resize();
+const clock = new THREE.Clock();
+const ease = t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+function loop() {
+  const dt = Math.min(clock.getDelta(), 0.05), t = clock.elapsedTime, pulse = (Math.sin(t * 4) + 1) / 2;
+  for (const row of cabinets) for (const cab of row) for (let d = 1; d <= DRAWERS; d++) {
+    const dr = cab.drawers[d];
+    if (Math.abs(dr.open - dr.target) > 1e-4) {
+      dr.open += (dr.target - dr.open) * Math.min(1, dt * 9);
+      dr.g.position.z = dr.z0 + dr.open;
+      if (dr.target === 0 && dr.open < 0.01) { dr.open = 0; dr.g.position.z = dr.z0; dr.tray.visible = false; if (trayItems.parent === dr.g && !sel) trayItems.visible = false; }
+    }
+  }
+  for (const f of fronts) f.material.emissive.setScalar(f.userData.hot ? 0.12 + pulse * 0.25 : 0).multiply(f.material.color);
+  if (sel) selOutline.material.opacity = 0.5 + pulse * 0.5;
+  if (marker.visible) marker.position.y = slotLocal(sel.p).y + 0.08 + Math.sin(t * 5) * 0.015;
+  if (bigMarker.visible) bigMarker.rotation.y += dt * 2;
+  updateLink();
+  if (fly) {
+    fly.t += dt; const k = ease(Math.min(1, fly.t / fly.dur));
+    controls.target.lerpVectors(fly.t0, fly.t1, k); camera.position.lerpVectors(fly.p0, fly.p1, k);
+    if (k >= 1) fly = null;
+  }
+  controls.update(); renderer.render(scene, camera);
+  requestAnimationFrame(loop);
+}
+
+/* boot */
+renderLegend(); tick(); setInterval(tick, 10000);
+const saved = localStorage.getItem(LS);
+if (saved) { $('sheetUrl').value = saved; loadRows([['เลขทรัพย์']]); loadSheet(saved); }
+else { loadRows(sampleData()); setSource('sample', 'ข้อมูลตัวอย่าง'); }
+setInterval(() => { const u = localStorage.getItem(LS); if (u && !document.hidden) loadSheet(u, true); }, 60000);
+loop();
+</script>
+</body>
+</html>
