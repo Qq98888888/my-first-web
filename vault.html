@@ -74,8 +74,8 @@ button{font:inherit}
 .toast.show{opacity:1;transform:translate(-50%,0)}
 
 .sheet{height:38%;min-height:240px;display:flex;flex-direction:column;padding:8px 10px 10px}
-.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:3px}
-.tab{height:30px;border:0;border-radius:8px;background:transparent;color:var(--mut);font-size:12px;font-weight:600;cursor:pointer}
+.tabs{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:3px}
+.tab{height:30px;border:0;border-radius:8px;background:transparent;color:var(--mut);font-size:11.5px;white-space:nowrap;font-weight:600;cursor:pointer}
 .tab.on{background:var(--panel2);color:var(--txt);box-shadow:inset 0 0 0 1px var(--line)}
 .pane{flex:1;min-height:0;overflow-y:auto;margin-top:8px;display:none;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 .pane.on{display:block}
@@ -142,6 +142,56 @@ table.cols{width:100%;border-collapse:collapse;font-size:10.5px;margin-top:4px}
 table.cols td{padding:4px 4px;border-top:1px solid var(--line);vertical-align:top}
 table.cols td:first-child{white-space:nowrap;color:var(--yellow);font-weight:600}
 .status{font-size:11px;margin-top:6px}
+/* stock check */
+.tab.chk{color:var(--green)}
+.tab.chk.on{background:rgba(52,211,153,.12);box-shadow:inset 0 0 0 1px rgba(52,211,153,.45)}
+.prog{height:9px;border-radius:5px;background:var(--line);overflow:hidden;display:flex;margin:6px 0 4px}
+.prog b{display:block;height:100%}
+.stats4{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-top:6px}
+.st4{background:var(--panel2);border-radius:8px;padding:5px 6px;text-align:center;cursor:pointer;border:1px solid transparent}
+.st4 .n{font-family:'JetBrains Mono';font-size:15px;font-weight:700}
+.st4 .k{font-size:9.5px;color:var(--mut)}
+.st4.on{border-color:var(--line)}
+.scan{display:flex;gap:6px;margin-top:8px}
+.scan input{flex:1;min-width:0;height:40px;border-radius:9px;border:1.5px solid var(--green);background:#0b1220;color:var(--txt);padding:0 10px;
+  font-family:'JetBrains Mono';font-size:15px;letter-spacing:1px;outline:none}
+.scan input::placeholder{font-family:'IBM Plex Sans Thai';font-size:12px;letter-spacing:0}
+.scan .btn{height:40px}
+.last{margin-top:6px;border-radius:9px;padding:7px 9px;font-size:12px;display:none;line-height:1.5}
+.last.show{display:block}
+.last.ok{background:rgba(52,211,153,.12);border:1px solid rgba(52,211,153,.5)}
+.last.warn{background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.5)}
+.last.err,.last.extra{background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.5)}
+.last.dup{background:rgba(135,150,171,.12);border:1px solid var(--line)}
+.last b.mono{font-size:13px}
+.ck{display:grid;grid-template-columns:22px 1fr auto;gap:7px;align-items:center;padding:6px 2px;border-top:1px solid var(--line);font-size:11.5px;cursor:pointer}
+.ck:first-of-type{border-top:0}
+.ck .bx{width:20px;height:20px;border-radius:6px;border:1.5px solid var(--dim);display:grid;place-items:center;font-size:12px;font-weight:700}
+.ck.ok .bx{background:var(--green);border-color:var(--green);color:#03140d}
+.ck.wrong .bx{background:var(--amber);border-color:var(--amber);color:#1a1300}
+.ck.miss .bx{border-color:var(--red);color:var(--red)}
+.ck .c{font-family:'JetBrains Mono';font-size:11px;color:var(--yellow)}
+.ck .sub{font-size:10px;color:var(--mut)}
+.cell .ckm{position:absolute;bottom:1px;right:3px;font-size:9px;font-weight:700}
+.cell .ckm.y{color:var(--green)} .cell .ckm.n{color:var(--red)}
+.lst{display:grid;grid-template-columns:auto 1fr auto;gap:7px;align-items:center;padding:5px 2px;border-top:1px solid var(--line);font-size:11px;cursor:pointer}
+.lst .c{font-family:'JetBrains Mono';color:var(--yellow);font-size:10.5px}
+.lst .nm{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lst .w{font-size:10px;color:var(--mut);white-space:nowrap}
+.btn.ok{background:var(--green);border-color:var(--green);color:#03140d}
+.btn.red{border-color:rgba(248,113,113,.5);color:var(--red)}
+.btn.sm{height:30px;padding:0 9px;font-size:11px}
+.cam{position:absolute;inset:0;z-index:7;background:#000;display:none}
+.cam.show{display:block}
+.cam video{width:100%;height:100%;object-fit:cover}
+.cam .fr{position:absolute;left:50%;top:46%;width:62%;aspect-ratio:1;transform:translate(-50%,-50%);border:3px solid var(--green);border-radius:16px;
+  box-shadow:0 0 0 2000px rgba(0,0,0,.45)}
+.cam .fr::after{content:'';position:absolute;left:6%;right:6%;top:50%;height:2px;background:var(--green);box-shadow:0 0 10px var(--green);animation:scanl 1.6s ease-in-out infinite}
+@keyframes scanl{0%,100%{top:12%}50%{top:88%}}
+.cam .ct{position:absolute;left:10px;right:10px;top:10px;text-align:center;font-size:12px;background:rgba(10,16,26,.8);border-radius:9px;padding:6px}
+.cam .cb{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);display:flex;gap:8px}
+.cam .res2{position:absolute;left:10px;right:10px;bottom:58px;text-align:center;font-size:12.5px;border-radius:9px;padding:7px;display:none}
+.cam .res2.show{display:block}
 </style>
 <script type="importmap">
 {"imports":{
@@ -179,6 +229,7 @@ table.cols td:first-child{white-space:nowrap;color:var(--yellow);font-weight:600
         <button class="chip on" data-m="normal">สีตู้</button>
         <button class="chip" data-m="fill">ความแน่นลิ้นชัก</button>
         <button class="chip" data-m="due">ใกล้หลุด <span class="badge" id="dueBadge">0</span></button>
+        <button class="chip" data-m="audit">ผลเช็คสต็อก</button>
       </div>
     </div>
     <div class="ov legend" id="legend"></div>
@@ -188,16 +239,33 @@ table.cols td:first-child{white-space:nowrap;color:var(--yellow);font-weight:600
       <button class="ibtn" id="bBig" title="มุมของใหญ่"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 8l9-5 9 5-9 5z"/><path d="M3 8v8l9 5 9-5V8M12 13v8"/></svg></button>
     </div>
     <div class="toast" id="toast"></div>
+    <div class="cam" id="cam">
+      <video id="camV" playsinline muted></video><div class="fr"></div>
+      <div class="ct">เล็ง QR / บาร์โค้ดเลขทรัพย์ให้อยู่ในกรอบ</div>
+      <div class="res2" id="camRes"></div>
+      <div class="cb"><button class="btn" id="camClose">ปิดกล้อง</button></div>
+    </div>
   </section>
 
   <section class="sheet">
     <nav class="tabs" id="tabs">
       <button class="tab on" data-t="dr">ลิ้นชัก</button>
+      <button class="tab chk" data-t="chk">✓ เช็คสต็อก</button>
       <button class="tab" data-t="cab">ตู้ทั้งหมด</button>
       <button class="tab" data-t="big">ของใหญ่</button>
       <button class="tab" data-t="data">ข้อมูล</button>
     </nav>
     <div class="pane on" id="p-dr"><div class="empty">แตะลิ้นชักในโมเดล 3D หรือพิมพ์เลขทรัพย์ 8 หลัก<br>เพื่อดูว่าทรัพย์อยู่ตู้ไหน ลิ้นชักไหน ช่องไหน</div></div>
+    <div class="pane" id="p-chk">
+      <div class="card">
+        <div id="chkHead"></div>
+        <div id="chkScan" style="display:none">
+          <div class="scan"><input id="scanIn" inputmode="numeric" placeholder="สแกน / พิมพ์เลข 8 หลัก แล้วกด Enter" autocomplete="off"><button class="btn ok" id="bCam">📷 สแกน</button></div>
+          <div class="last" id="chkLast"></div>
+        </div>
+      </div>
+      <div id="chkBody"></div>
+    </div>
     <div class="pane" id="p-cab"></div>
     <div class="pane" id="p-big"></div>
     <div class="pane" id="p-data">
@@ -535,6 +603,7 @@ function paintFronts() {
     const { s, col, d } = f.userData, st = drawerStats(s, col, d), m = f.material;
     if (mode === 'normal') m.color.setHex(CAB[col].hex);
     else if (mode === 'fill') m.color.setHSL(0.33 * (1 - st.n / PER), 0.75, st.n ? 0.5 : 0.18);
+    else if (mode === 'audit') { const a = drawerAudit(s, col, d); m.color.setHex(AUD_COL[a.state]); f.userData.hot = a.state === 'miss'; continue; }
     else m.color.setHex(st.conf ? COL.conf : st.lost ? COL.lost : st.due ? COL.due : 0x334155);
     f.userData.hot = mode === 'due' && (st.conf || st.lost || st.due);
   }
@@ -545,7 +614,7 @@ function paintBig() {
   bigList.slice(0, BIG_MAX).forEach((it, i) => {
     M.makeTranslation(bigPos(i)); bigMesh.setMatrixAt(i, M);
     const f = flag(it);
-    bigMesh.setColorAt(i, tc.setHex(f === 'ok' ? 0xc8925a : COL[f]));
+    bigMesh.setColorAt(i, tc.setHex(mode === 'audit' ? AUD_COL[itemAudit(it)] : f === 'ok' ? 0xc8925a : COL[f]));
   });
   bigMesh.instanceMatrix.needsUpdate = true; if (bigMesh.instanceColor) bigMesh.instanceColor.needsUpdate = true;
 }
@@ -557,6 +626,7 @@ function fillTray(s, col, d) {
     if (!a.length) { M.makeScale(0.9, 0.12, 0.9).setPosition(v.x, v.y - 0.017, v.z); trayItems.setColorAt(p - 1, tc.setHex(COL.empty)); }
     else if (a.length === 1 && a[0].big) { M.makeScale(0.9, 0.25, 0.9).setPosition(v.x, v.y - 0.014, v.z); trayItems.setColorAt(p - 1, tc.setHex(COL.big)); }
     else { M.makeTranslation(v.x, v.y, v.z); trayItems.setColorAt(p - 1, tc.setHex(COL[f])); }
+    if (a.length && mode === 'audit') trayItems.setColorAt(p - 1, tc.setHex(AUD_COL[cellAudit(a, s, col, d)]));
     trayItems.setMatrixAt(p - 1, M);
   }
   trayItems.instanceMatrix.needsUpdate = true; trayItems.instanceColor.needsUpdate = true;
@@ -570,7 +640,7 @@ let fly = null;
 function flyTo(tgt, pos, dur = 0.9) { fly = { t: 0, dur, t0: controls.target.clone(), p0: camera.position.clone(), t1: tgt.clone(), p1: pos.clone() }; }
 function cabNormal(cab) { return new THREE.Vector3(Math.sin(cab.g.rotation.y), 0, Math.cos(cab.g.rotation.y)); }
 
-function openDrawer(s, col, d, p = null, code = null, doFly = true) {
+function openDrawer(s, col, d, p = null, code = null, doFly = true, keepTab = false) {
   // close the previous drawer
   if (sel) { const pd = cabinets[sel.s][sel.col].drawers[sel.d]; if (!(sel.s === s && sel.col === col && sel.d === d)) pd.target = 0; }
   const cab = cabinets[s][col], dr = cab.drawers[d];
@@ -585,7 +655,8 @@ function openDrawer(s, col, d, p = null, code = null, doFly = true) {
     const P = cab.g.localToWorld(new THREE.Vector3(dr.g.position.x, dr.g.position.y, dr.z0 + 0.17)); // tray centre when open
     flyTo(P.clone().add(new THREE.Vector3(0, 0.1, 0)), P.clone().addScaledVector(n, 0.55).add(new THREE.Vector3(0, 0.85, 0)));
   }
-  setTab('dr'); renderDrawer();
+  if (!keepTab && !$('p-chk').classList.contains('on')) setTab('dr');
+  renderDrawer(); renderCheck();
 }
 function placeMarkers() {
   marker.visible = bigMarker.visible = linkLine.visible = false;
@@ -634,7 +705,7 @@ function closeDrawer() {
   if (!sel) return;
   cabinets[sel.s][sel.col].drawers[sel.d].target = 0;
   selOutline.visible = marker.visible = bigMarker.visible = linkLine.visible = false;
-  sel = null; renderDrawer();
+  sel = null; renderDrawer(); renderCheck();
 }
 
 /* =========================================================
@@ -647,7 +718,7 @@ function setTab(t) {
   document.querySelectorAll('.tab').forEach(x => x.classList.toggle('on', x.dataset.t === t));
   document.querySelectorAll('.pane').forEach(x => x.classList.toggle('on', x.id === 'p-' + t));
 }
-$('tabs').addEventListener('click', e => { const t = e.target.closest('.tab'); if (t) setTab(t.dataset.t); });
+$('tabs').addEventListener('click', e => { const t = e.target.closest('.tab'); if (!t) return; setTab(t.dataset.t); if (t.dataset.t === 'chk') { setMode('audit'); renderCheck(); } });
 let toastT;
 function toast(m) { const t = $('toast'); t.textContent = m; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2600); }
 
@@ -696,7 +767,7 @@ function renderDrawer() {
   html += `<div class="card" style="padding:8px"><h3><span>ช่องในลิ้นชัก (${st.n}/${PER})</span><span>${st.big ? `📦 ${st.big} ของใหญ่` : ''}</span></h3><div class="dgrid">`;
   for (let q = 1; q <= PER; q++) {
     const a = cellItems(s, col, d, q), f = cellFlag(a), seq = (d - 1) * PER + q;
-    html += `<div class="cell ${f} ${p === q ? 'sel' : ''}" data-p="${q}">${String(seq).padStart(3, '0')}${a.some(x => x.big) ? '<span class="big">📦</span>' : ''}<small>ช่อง ${q}</small></div>`;
+    html += `<div class="cell ${f} ${p === q ? 'sel' : ''}" data-p="${q}">${String(seq).padStart(3, '0')}${a.some(x => x.big) ? '<span class="big">📦</span>' : ''}${audit && a.length ? (() => { const r = cellAudit(a, s, col, d); return r === 'ok' || r === 'wrong' ? '<span class="ckm y">✓</span>' : r === 'miss' ? '<span class="ckm n">✕</span>' : ''; })() : ''}<small>ช่อง ${q}</small></div>`;
   }
   html += `</div></div>`;
   el.innerHTML = html;
@@ -746,10 +817,14 @@ function renderLegend() {
   const el = $('legend');
   if (mode === 'normal') el.innerHTML = `<span><i class="sw" style="background:#f1f5f9"></i>ตู้ขาว (หลัก 5 = 0)</span><span><i class="sw" style="background:#facc15"></i>ตู้เหลือง (= 1)</span><span><i class="sw" style="background:#c8925a"></i>ของใหญ่</span>`;
   else if (mode === 'fill') el.innerHTML = `<span>ช่องที่ใช้ 0 <i class="grad"></i> 30</span>`;
+  else if (mode === 'audit') el.innerHTML = `<span><i class="sw" style="background:#64748b"></i>ยังไม่เช็ค</span><span><i class="sw" style="background:#38bdf8"></i>กำลังนับ</span><span><i class="sw" style="background:#22c55e"></i>ครบ</span><span><i class="sw" style="background:#ef4444"></i>มีของไม่พบ</span>`;
   else el.innerHTML = `<span><i class="sw" style="background:#fbbf24"></i>ใกล้หลุด ≥${DUE_MONTHS} ด.</span><span><i class="sw" style="background:#f87171"></i>หลุด</span><span><i class="sw" style="background:#a78bfa"></i>ช่องซ้ำ</span>`;
 }
-$('modes').addEventListener('click', e => { const c = e.target.closest('.chip'); if (!c) return; mode = c.dataset.m;
-  document.querySelectorAll('#modes .chip').forEach(x => x.classList.toggle('on', x === c)); paintFronts(); renderLegend(); });
+function setMode(m) {
+  mode = m; document.querySelectorAll('#modes .chip').forEach(x => x.classList.toggle('on', x.dataset.m === m));
+  paintFronts(); paintBig(); renderLegend(); if (sel) fillTray(sel.s, sel.col, sel.d);
+}
+$('modes').addEventListener('click', e => { const c = e.target.closest('.chip'); if (c) setMode(c.dataset.m); });
 $('bTop').onclick = () => { closeDrawer(); flyTo(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 13, 0.01)); };
 $('b3d').onclick = () => { closeDrawer(); flyTo(HOME.tgt, HOME.pos); };
 $('bBig').onclick = () => flyBig();
@@ -796,6 +871,7 @@ function loadRows(rows) {
   items = out; invalid = bad; buildIndex();
   paintFronts(); paintBig(); renderKpi(); renderCabs(); renderBig();
   if (sel) { fillTray(sel.s, sel.col, sel.d); placeMarkers(); renderDrawer(); }
+  renderCheck();
   return out.length;
 }
 async function loadSheet(u, quiet = false) {
@@ -872,12 +948,292 @@ function loop() {
   requestAnimationFrame(loop);
 }
 
+
+/* =========================================================
+   8) STOCK CHECK (เช็คสต็อก)
+   ========================================================= */
+const AK = 'vault.audit', NK = 'vault.checker';
+let audit = null;
+try { audit = JSON.parse(localStorage.getItem(AK) || 'null'); } catch { audit = null; }
+const saveAudit = () => audit ? localStorage.setItem(AK, JSON.stringify(audit)) : localStorage.removeItem(AK);
+const dkey = (s, c, d) => `${s}-${c}-${d}`;
+const dname = (s, c, d) => `ตู้${CAB[c].name} คู่ ${s + 1} ล.${d}`;
+const AUD_COL = { none: 0x1e293b, todo: 0x64748b, prog: 0x38bdf8, ok: 0x22c55e, wrong: 0xf59e0b, miss: 0xef4444 };
+let chkFilter = 'miss';
+
+function itemAudit(it) {
+  if (!audit) return 'todo';
+  const r = audit.scans[it.code];
+  if (r) return r.wrong ? 'wrong' : 'ok';
+  return audit.done[dkey(it.slot, it.col, it.drawer)] ? 'miss' : 'todo';
+}
+function cellAudit(a, s, c, d) {
+  const pr = a.filter(present); if (!pr.length) return 'none';
+  const st = pr.map(itemAudit);
+  return st.includes('miss') ? 'miss' : st.includes('todo') ? (st.some(x => x !== 'todo') ? 'prog' : 'todo') : st.includes('wrong') ? 'wrong' : 'ok';
+}
+function drawerExpected(s, c, d) {
+  const out = []; for (let p = 1; p <= PER; p++) for (const it of index[s][c][d][p]) out.push(it); return out;
+}
+function drawerAudit(s, c, d) {
+  const exp = drawerExpected(s, c, d), done = !!(audit && audit.done[dkey(s, c, d)]);
+  const found = exp.filter(it => audit && audit.scans[it.code]).length;
+  const state = !audit ? 'todo' : done ? (found === exp.length ? 'ok' : 'miss') : found ? 'prog' : exp.length ? 'todo' : 'none';
+  return { exp, found, done, state };
+}
+function auditSummary() {
+  const exp = items.filter(present);
+  const res = { total: exp.length, ok: 0, wrong: 0, miss: 0, todo: 0, extra: audit ? Object.keys(audit.extras).length : 0, lists: { ok: [], wrong: [], miss: [], todo: [] } };
+  for (const it of exp) { const r = itemAudit(it); res[r]++; res.lists[r].push(it); }
+  let dTot = 0, dDone = 0;
+  for (let s = 0; s < PAIRS; s++) for (let c = 0; c < 2; c++) for (let d = 1; d <= DRAWERS; d++) {
+    const has = drawerStats(s, c, d).n > 0, done = audit && audit.done[dkey(s, c, d)];
+    if (has || done) { dTot++; if (done) dDone++; }
+  }
+  res.dTot = dTot; res.dDone = dDone; return res;
+}
+
+/* feedback */
+let actx;
+function beep(kind) {
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    const seq = kind === 'ok' ? [[1320, .09]] : kind === 'warn' || kind === 'dup' ? [[880, .1], [880, .1]] : [[300, .25]];
+    let t = actx.currentTime;
+    for (const [f, d] of seq) { const o = actx.createOscillator(), g = actx.createGain(); o.frequency.value = f; o.type = 'square';
+      g.gain.setValueAtTime(.08, t); g.gain.exponentialRampToValueAtTime(.0001, t + d); o.connect(g).connect(actx.destination); o.start(t); o.stop(t + d); t += d + .05; }
+  } catch {}
+  if (navigator.vibrate) navigator.vibrate(kind === 'ok' ? 60 : [80, 60, 80]);
+}
+function feedback(kind, html) {
+  beep(kind);
+  const el = $('chkLast'); el.className = `last show ${kind}`; el.innerHTML = html;
+  const c = $('camRes'); c.className = `res2 show last ${kind}`; c.innerHTML = html;
+}
+
+/* core: handle one scanned code */
+function onScan(raw) {
+  if (!audit) { toast('กด “เริ่มรอบเช็ค” ก่อน'); return; }
+  const p = parseCode(raw);
+  if (p.err) { feedback('err', `✕ <b class="mono">${esc(raw)}</b> — ${p.err}`); return; }
+  const code = p.code, it = items.find(x => x.code === code);
+  if (audit.scans[code] || audit.extras[code]) { feedback('dup', `↺ <b class="mono">${fmtCode(code)}</b> สแกนไปแล้ว`); return; }
+  const rec = { t: Date.now(), by: audit.by };
+  const here = sel ? dkey(sel.s, sel.col, sel.d) : null, home = dkey(p.slot, p.col, p.drawer);
+  if (!it || !present(it)) {
+    rec.reason = it ? `ชีตระบุ “${it.status}”` : 'ไม่มีในชีต';
+    if (sel) rec.at = dname(sel.s, sel.col, sel.d);
+    audit.extras[code] = rec; saveAudit();
+    feedback('extra', `⚠ <b>ของเกิน</b> <b class="mono">${fmtCode(code)}</b> — ${rec.reason}${it ? ` · ${esc(it.name)}` : ''}<br><span style="color:var(--mut)">แยกของชิ้นนี้ออกมาตรวจสอบ</span>`);
+  } else {
+    if (here && here !== home && !it.big) rec.wrong = dname(sel.s, sel.col, sel.d);
+    audit.scans[code] = rec; saveAudit();
+    if (rec.wrong) feedback('warn', `⚠ <b>ผิดลิ้นชัก</b> <b class="mono">${fmtCode(code)}</b> ${esc(it.name)}<br>ควรอยู่ <b>${dname(p.slot, p.col, p.drawer)} ช่อง ${p.pos}</b> (ตอนนี้เปิด ${rec.wrong})`);
+    else feedback('ok', `✓ <b class="mono">${fmtCode(code)}</b> ${esc(it.name)}${it.big ? ' · 📦 ของใหญ่' : ''}<br><span style="color:var(--mut)">${dname(p.slot, p.col, p.drawer)} · ช่อง ${p.pos}</span>`);
+    if (!rec.wrong && !it.big) {
+      if (here !== home) openDrawer(p.slot, p.col, p.drawer, p.pos, code, !camOn(), true);
+      else { sel.p = p.pos; sel.code = code; placeMarkers(); }
+    }
+  }
+  refreshAudit();
+}
+function refreshAudit() {
+  if (mode === 'audit') { paintFronts(); paintBig(); }
+  if (sel) fillTray(sel.s, sel.col, sel.d);
+  renderDrawer(); renderCheck();
+}
+function toggleManual(code) {
+  if (!audit) return;
+  if (audit.scans[code]) delete audit.scans[code];
+  else audit.scans[code] = { t: Date.now(), by: audit.by, manual: true };
+  saveAudit(); refreshAudit();
+}
+function markDone(next) {
+  if (!audit || !sel) return;
+  const k = dkey(sel.s, sel.col, sel.d);
+  if (audit.done[k] && !next) delete audit.done[k];
+  else {
+    audit.done[k] = Date.now();
+    const a = drawerAudit(sel.s, sel.col, sel.d), miss = a.exp.length - a.found;
+    if (miss) { beep('err'); toast(`${dname(sel.s, sel.col, sel.d)}: ไม่พบ ${miss} ชิ้น`); } else { beep('ok'); toast(`${dname(sel.s, sel.col, sel.d)} ครบ ✓`); }
+  }
+  saveAudit();
+  if (next) {   // move to the next drawer that has items and is not done
+    let { s, col, d } = sel;
+    for (let i = 0; i < PAIRS * 2 * DRAWERS; i++) {
+      d++; if (d > DRAWERS) { d = 1; col++; if (col > 1) { col = 0; s = (s + 1) % PAIRS; } }
+      if (!audit.done[dkey(s, col, d)] && drawerStats(s, col, d).n) { openDrawer(s, col, d, null, null, true, true); break; }
+    }
+  }
+  refreshAudit();
+}
+
+function renderCheck() {
+  if (!$('chkHead') || !index) return;
+  const head = $('chkHead'), body = $('chkBody');
+  $('chkScan').style.display = audit ? '' : 'none';
+  if (!audit) {
+    head.innerHTML = `<h3><span>เช็คสต็อกห้องเซฟ</span></h3>
+      <div class="note">ระบบจะเทียบของจริงในลิ้นชักกับข้อมูลในชีต (${fmt(items.filter(present).length)} ชิ้นที่ควรอยู่ในเซฟ)<ol style="margin-top:4px">
+      <li>เปิดลิ้นชัก แล้ว <b>สแกน QR/บาร์โค้ด</b> หรือพิมพ์เลขทีละชิ้น</li><li>ชิ้นที่ไม่มีฉลาก แตะรายการเพื่อติ๊ก “พบ” เอง</li>
+      <li>นับครบแล้วกด <b>“ลิ้นชักนี้เสร็จ”</b> ชิ้นที่ยังไม่ถูกสแกนจะเป็น “ไม่พบ”</li><li>ส่งออกผลเป็น CSV (เปิดใน Excel / Google Sheets ได้)</li></ol></div>
+      <div class="field"><input id="chkBy" placeholder="ชื่อผู้เช็ค" value="${esc(localStorage.getItem(NK) || '')}"><button class="btn ok" id="bStart">เริ่มรอบเช็ค</button></div>`;
+    body.innerHTML = '';
+    return;
+  }
+  const S = auditSummary(), pct = n => S.total ? n / S.total * 100 : 0;
+  head.innerHTML = `<h3><span>รอบเช็ค ${new Date(audit.start).toLocaleString('th-TH', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })} · ${esc(audit.by || '-')}</span><span>ลิ้นชัก ${S.dDone}/${S.dTot}</span></h3>
+    <div style="display:flex;justify-content:space-between;font-size:11.5px"><span>ตรวจแล้ว <b class="mono">${fmt(S.ok + S.wrong)}</b> / ${fmt(S.total)} ชิ้น</span><b class="mono">${Math.floor(pct(S.ok + S.wrong))}%</b></div>
+    <div class="prog"><b style="width:${pct(S.ok)}%;background:var(--green)"></b><b style="width:${pct(S.wrong)}%;background:var(--amber)"></b><b style="width:${pct(S.miss)}%;background:var(--red)"></b></div>
+    <div class="stats4">
+      <div class="st4 ${chkFilter === 'ok' ? 'on' : ''}" data-f="ok"><div class="n" style="color:var(--green)">${fmt(S.ok)}</div><div class="k">พบ</div></div>
+      <div class="st4 ${chkFilter === 'miss' ? 'on' : ''}" data-f="miss"><div class="n" style="color:var(--red)">${fmt(S.miss)}</div><div class="k">ไม่พบ</div></div>
+      <div class="st4 ${chkFilter === 'extra' ? 'on' : ''}" data-f="extra"><div class="n" style="color:var(--violet)">${fmt(S.extra + S.wrong)}</div><div class="k">เกิน/ผิดที่</div></div>
+      <div class="st4 ${chkFilter === 'todo' ? 'on' : ''}" data-f="todo"><div class="n" style="color:var(--mut)">${fmt(S.todo)}</div><div class="k">ยังไม่เช็ค</div></div>
+    </div>`;
+  let html = '';
+  if (sel) {
+    const a = drawerAudit(sel.s, sel.col, sel.d);
+    html += `<div class="card"><h3><span style="color:var(--txt)"><i class="sw" style="background:${CAB[sel.col].css};margin-right:5px"></i>${dname(sel.s, sel.col, sel.d)} · ลำดับ ${seqRange(sel.d)}</span>
+      <span>${a.found}/${a.exp.length} ${a.done ? (a.state === 'ok' ? '<b style="color:var(--green)">ครบ</b>' : '<b style="color:var(--red)">ขาด</b>') : ''}</span></h3>`;
+    html += a.exp.length ? a.exp.map(it => {
+      const r = itemAudit(it), rec = audit.scans[it.code];
+      return `<div class="ck ${r}" data-tog="${it.code}"><span class="bx">${r === 'ok' || r === 'wrong' ? '✓' : r === 'miss' ? '✕' : ''}</span>
+        <div><span class="c">${fmtCode(it.code)}</span> ${esc(it.name)}<div class="sub">ช่อง ${it.pos}${it.big ? ' · 📦 อยู่มุมของใหญ่ ' + spotName(it.spot) : ''}${rec ? ` · ${rec.manual ? 'ติ๊กเอง' : 'สแกน'} ${new Date(rec.t).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}` : ''}${rec && rec.wrong ? ` · <span style="color:var(--amber)">เจอที่ ${rec.wrong}</span>` : ''}</div></div>
+        <span class="sub">${r === 'todo' ? 'แตะ = พบ' : ''}</span></div>`;
+    }).join('') : `<div class="empty" style="padding:10px">ลิ้นชักนี้ไม่ควรมีของ — ถ้าเจอของให้สแกน จะถูกบันทึกเป็น “ของเกิน”</div>`;
+    html += `<div class="btns"><button class="btn ${a.done ? '' : 'ok'}" data-act="done">${a.done ? '↺ ยกเลิก “เสร็จ”' : '✓ ลิ้นชักนี้เสร็จ'}</button>
+      <button class="btn" data-act="next">เสร็จ → ลิ้นชักถัดไป ›</button><button class="btn sm" data-act="label">🖨 ฉลาก QR</button></div></div>`;
+  } else html += `<div class="card"><div class="empty" style="padding:10px">แตะลิ้นชักในโมเดล 3D หรือสแกนชิ้นแรก<br>ระบบจะเปิดลิ้นชักนั้นให้อัตโนมัติ</div></div>`;
+
+  const L = chkFilter === 'extra'
+    ? [...Object.entries(audit.extras).map(([c, r]) => ({ c, nm: (items.find(x => x.code === c) || {}).name || '-', w: `เกิน · ${r.reason}${r.at ? ' · เจอที่ ' + r.at : ''}` })),
+       ...S.lists.wrong.map(it => ({ c: it.code, nm: it.name, w: `ผิดที่ · เจอ ${audit.scans[it.code].wrong}` }))]
+    : S.lists[chkFilter].map(it => ({ c: it.code, nm: it.name, w: dname(it.slot, it.col, it.drawer) + ' ช่อง ' + it.pos }));
+  const TT = { ok: 'พบแล้ว', miss: 'ไม่พบ (ลิ้นชักที่นับเสร็จแล้ว)', extra: 'ของเกิน / วางผิดลิ้นชัก', todo: 'ยังไม่เช็ค' }[chkFilter];
+  html += `<div class="card"><h3><span>${TT} (${L.length})</span><span>${L.length > 60 ? 'แสดง 60 รายการแรก' : ''}</span></h3>${L.length ? L.slice(0, 60).map(x =>
+    `<div class="lst" data-go="${x.c}"><span class="c">${fmtCode(x.c)}</span><span class="nm">${esc(x.nm)}</span><span class="w">${esc(x.w)}</span></div>`).join('') : '<div class="empty" style="padding:8px">ไม่มีรายการ</div>'}</div>`;
+  html += `<div class="btns" style="margin-bottom:8px"><button class="btn pri" data-act="export">⬇ ส่งออกผล CSV</button><button class="btn red" data-act="end">จบรอบเช็ค</button></div>`;
+  body.innerHTML = html;
+}
+
+$('p-chk').addEventListener('click', e => {
+  const t = e.target;
+  if (t.id === 'bStart') {
+    const by = $('chkBy').value.trim(); localStorage.setItem(NK, by);
+    audit = { id: Date.now(), start: Date.now(), by, scans: {}, extras: {}, done: {} }; saveAudit();
+    setMode('audit'); refreshAudit(); setTimeout(() => $('scanIn').focus(), 50); return;
+  }
+  const f = t.closest('[data-f]'); if (f) { chkFilter = f.dataset.f; renderCheck(); return; }
+  const g = t.closest('[data-tog]'); if (g) { toggleManual(g.dataset.tog); return; }
+  const go = t.closest('[data-go]'); if (go) { const p = parseCode(go.dataset.go); if (!p.err) openDrawer(p.slot, p.col, p.drawer, p.pos, p.code, true, true); return; }
+  const a = t.closest('[data-act]'); if (!a) return;
+  const act = a.dataset.act;
+  if (act === 'done') markDone(false);
+  else if (act === 'next') markDone(true);
+  else if (act === 'label') printLabels(sel.s, sel.col, sel.d);
+  else if (act === 'export') exportAudit();
+  else if (act === 'end') {
+    if (!confirm('จบรอบเช็คนี้? ควรส่งออกผล CSV ก่อน เพราะข้อมูลรอบนี้จะถูกล้าง')) return;
+    audit = null; saveAudit(); stopCam(); $('chkLast').className = 'last'; refreshAudit(); setMode('normal');
+  }
+});
+$('scanIn').addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
+  const v = e.target.value.trim(); e.target.value = ''; if (v) onScan(v);
+});
+
+/* export */
+function exportAudit() {
+  const S = auditSummary();
+  const rows = [['เลขทรัพย์', 'ชื่อทรัพย์', 'ตู้', 'คู่', 'ลิ้นชัก', 'ช่อง', 'ของใหญ่', 'ผลเช็ค', 'รายละเอียด', 'เวลา', 'วิธี', 'ผู้เช็ค']];
+  const RT = { ok: 'พบ', wrong: 'พบผิดลิ้นชัก', miss: 'ไม่พบ', todo: 'ยังไม่เช็ค' };
+  for (const it of items.filter(present).sort((a, b) => a.code.localeCompare(b.code))) {
+    const r = itemAudit(it), rec = audit.scans[it.code];
+    rows.push([it.code, it.name, CAB[it.col].name, it.slot + 1, it.drawer, it.pos, it.big ? 'ใช่' : '', RT[r], rec && rec.wrong ? 'เจอที่ ' + rec.wrong : '',
+      rec ? new Date(rec.t).toLocaleString('th-TH') : '', rec ? (rec.manual ? 'ติ๊กเอง' : 'สแกน') : '', rec ? rec.by : '']);
+  }
+  for (const [c, r] of Object.entries(audit.extras)) {
+    const p = parseCode(c), it = items.find(x => x.code === c);
+    rows.push([c, it ? it.name : '', p.err ? '' : CAB[p.col].name, p.err ? '' : p.slot + 1, p.err ? '' : p.drawer, p.err ? '' : p.pos, '', 'ของเกิน',
+      r.reason + (r.at ? ' · เจอที่ ' + r.at : ''), new Date(r.t).toLocaleString('th-TH'), 'สแกน', r.by]);
+  }
+  rows.push([], ['สรุป', `ทั้งหมด ${S.total}`, `พบ ${S.ok}`, `ผิดลิ้นชัก ${S.wrong}`, `ไม่พบ ${S.miss}`, `ยังไม่เช็ค ${S.todo}`, `เกิน ${S.extra}`, `ลิ้นชักเสร็จ ${S.dDone}/${S.dTot}`]);
+  const csv = '﻿' + rows.map(r => r.map(v => { v = String(v ?? ''); return /[",\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v; }).join(',')).join('\n');
+  const d = new Date(), pad = n => String(n).padStart(2, '0');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+  a.download = `stock-check-${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}.csv`;
+  document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  toast('ส่งออกผลเช็คแล้ว');
+}
+
+/* camera scanning: BarcodeDetector (Android Chrome) → fallback jsQR (iOS / others) */
+let camStream = null, camTimer = null, detector = null;
+const camOn = () => !!camStream;
+const loadScript = src => new Promise((ok, bad) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = bad; document.head.appendChild(s); });
+async function startCam() {
+  if (!audit) { toast('กด “เริ่มรอบเช็ค” ก่อน'); return; }
+  if (!navigator.mediaDevices?.getUserMedia) { toast('เบราว์เซอร์นี้เปิดกล้องไม่ได้ (ต้องเปิดผ่าน https)'); return; }
+  try { camStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false }); }
+  catch (e) { toast('เปิดกล้องไม่ได้: ' + e.message); return; }
+  const v = $('camV'); v.srcObject = camStream; await v.play().catch(() => {});
+  $('cam').classList.add('show'); $('camRes').className = 'res2';
+  if (!detector && 'BarcodeDetector' in window) { try { detector = new BarcodeDetector({ formats: ['qr_code', 'code_128', 'code_39', 'ean_13', 'itf'] }); } catch { detector = null; } }
+  if (!detector && !window.jsQR) { try { await loadScript('https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js'); } catch { toast('โหลดตัวอ่าน QR ไม่สำเร็จ'); } }
+  const cv = document.createElement('canvas'), cx = cv.getContext('2d', { willReadFrequently: true });
+  let last = '', lastT = 0;
+  const step = async () => {
+    if (!camStream) return;
+    let txt = null;
+    try {
+      if (detector) { const r = await detector.detect(v); if (r[0]) txt = r[0].rawValue; }
+      else if (window.jsQR && v.videoWidth) {
+        const w = 520, h = Math.round(v.videoHeight * w / v.videoWidth); cv.width = w; cv.height = h; cx.drawImage(v, 0, 0, w, h);
+        const r = window.jsQR(cx.getImageData(0, 0, w, h).data, w, h, { inversionAttempts: 'dontInvert' }); if (r) txt = r.data;
+      }
+    } catch {}
+    if (txt) { const t = Date.now(); if (txt !== last || t - lastT > 3000) { last = txt; lastT = t; onScan(txt); } }
+    camTimer = setTimeout(step, 150);
+  };
+  step();
+}
+function stopCam() {
+  if (camStream) camStream.getTracks().forEach(t => t.stop());
+  camStream = null; clearTimeout(camTimer); $('cam').classList.remove('show');
+}
+$('bCam').onclick = startCam;
+$('camClose').onclick = stopCam;
+
+/* QR labels for one drawer (print & stick on each item / bag) */
+async function printLabels(s, c, d) {
+  const exp = drawerExpected(s, c, d);
+  if (!exp.length) { toast('ลิ้นชักนี้ไม่มีรายการในชีต'); return; }
+  const w = window.open('', '_blank'); if (!w) { toast('เบราว์เซอร์บล็อกหน้าต่างใหม่'); return; }
+  w.document.write('<p style="font-family:sans-serif">กำลังสร้างฉลาก…</p>');
+  if (!window.qrcode) { try { await loadScript('https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js'); } catch { w.close(); toast('โหลดตัวสร้าง QR ไม่สำเร็จ'); return; } }
+  const lab = exp.map(it => {
+    const q = window.qrcode(0, 'M'); q.addData(it.code); q.make();
+    return `<div class="l"><div class="q">${q.createSvgTag({ cellSize: 3, margin: 0, scalable: true })}</div><div class="t"><b>${fmtCode(it.code)}</b><span>${esc(it.name)}</span><i>${dname(s, c, d)} · ช่อง ${it.pos}${it.big ? ' · ของใหญ่' : ''}</i></div></div>`;
+  }).join('');
+  w.document.open();
+  w.document.write(`<!DOCTYPE html><html lang="th"><head><meta charset="utf-8"><title>ฉลาก ${dname(s, c, d)}</title>
+  <style>@page{size:A4;margin:8mm}body{font-family:'IBM Plex Sans Thai',Tahoma,sans-serif;margin:0}
+  .g{display:grid;grid-template-columns:repeat(3,1fr);gap:3mm}.l{display:flex;gap:2mm;border:1px dashed #999;padding:2mm;height:22mm;break-inside:avoid;align-items:center}
+  .q{width:18mm;height:18mm;flex-shrink:0}.q svg{width:100%;height:100%}.t{display:flex;flex-direction:column;font-size:8pt;line-height:1.25;min-width:0}
+  .t b{font-family:monospace;font-size:10.5pt}.t span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.t i{font-style:normal;color:#555;font-size:7pt}
+  h1{font-size:11pt;margin:0 0 3mm}</style></head><body><h1>ฉลาก QR · ${dname(s, c, d)} (${exp.length} ชิ้น)</h1><div class="g">${lab}</div>
+  <script>setTimeout(()=>print(),300)<\/script></body></html>`);
+  w.document.close();
+}
+
 /* boot */
 renderLegend(); tick(); setInterval(tick, 10000);
 const saved = localStorage.getItem(LS);
 if (saved) { $('sheetUrl').value = saved; loadRows([['เลขทรัพย์']]); loadSheet(saved); }
 else { loadRows(sampleData()); setSource('sample', 'ข้อมูลตัวอย่าง'); }
 setInterval(() => { const u = localStorage.getItem(LS); if (u && !document.hidden) loadSheet(u, true); }, 60000);
+if (audit) { setMode('audit'); }
+renderCheck();
 loop();
 </script>
 </body>
